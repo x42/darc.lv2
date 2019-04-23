@@ -1,0 +1,25 @@
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 8 ;
+		lv2:symbol "inL" ;
+		lv2:name "In Left"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 9 ;
+		lv2:symbol "outL" ;
+		lv2:name "Out Left"
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 10 ;
+		lv2:symbol "inR" ;
+		lv2:name "In Right"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 11 ;
+		lv2:symbol "outR" ;
+		lv2:name "Out Right"
+	] ;
+	.
