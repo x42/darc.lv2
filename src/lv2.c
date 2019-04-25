@@ -169,7 +169,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		dr = 0;
 	} else {
 		r = self->rat;
-		dr /= (float)self->sample_rate / 25.f;
+		dr /= (float)n_samples;
 	}
 
 	/* localize variables */
