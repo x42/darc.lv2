@@ -71,7 +71,7 @@ typedef struct {
 
 } Dyncomp;
 
-void
+static inline void
 Dyncomp_reset (Dyncomp* self)
 {
 	self->za1  = 0.f;
@@ -83,13 +83,13 @@ Dyncomp_reset (Dyncomp* self)
 	self->newg = true;
 }
 
-void
+static inline void
 Dyncomp_set_ratio (Dyncomp* self, float r)
 {
 	self->rat1 = 0.5f * r;
 }
 
-void
+static inline void
 Dyncomp_set_threshold (Dyncomp* self, float t)
 {
 	if (t == self->l_thr) {
@@ -99,7 +99,7 @@ Dyncomp_set_threshold (Dyncomp* self, float t)
 	self->p_thr = 0.5f * powf (10.0f, 0.1f * t);
 }
 
-void
+static inline void
 Dyncomp_set_attack (Dyncomp* self, float a)
 {
 	if (a == self->t_att) {
@@ -109,7 +109,7 @@ Dyncomp_set_attack (Dyncomp* self, float a)
 	self->w_att = 0.5f / (self->sample_rate * a);
 }
 
-void
+static inline void
 Dyncomp_set_release (Dyncomp* self, float r)
 {
 	if (r == self->t_rel) {
@@ -119,7 +119,7 @@ Dyncomp_set_release (Dyncomp* self, float r)
 	self->w_rel = 3.5f / (self->sample_rate * r);
 }
 
-void
+static inline void
 Dyncomp_get_gain (Dyncomp* self, float* gmin, float* gmax, float* rms)
 {
 	*gmin = self->gmin * 8.68589f; /* 20 / log(10) */
@@ -132,7 +132,7 @@ Dyncomp_get_gain (Dyncomp* self, float* gmin, float* gmax, float* rms)
 	self->newg = true;
 }
 
-void
+static inline void
 Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 {
 	self->sample_rate = sample_rate;
@@ -152,7 +152,7 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 	Dyncomp_reset (self);
 }
 
-void
+static inline void
 Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 {
 	float gmin, gmax;
