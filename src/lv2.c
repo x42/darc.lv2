@@ -67,7 +67,9 @@ typedef struct {
 	bool  newg;
 	float gmax;
 	float gmin;
+
 	float rms;
+	float w_rms;
 
 } Dyncomp;
 
@@ -125,7 +127,7 @@ Dyncomp_get_gain (Dyncomp* self, float* gmin, float* gmax, float* rms)
 	*gmin = self->gmin * 8.68589f; /* 20 / log(10) */
 	*gmax = self->gmax * 8.68589f;
 	if (self->rms > 1e-8f) {
-		*rms = 10.f * log10f (self->rms * self->norm_input);
+		*rms = 10.f * log10f (2.f * self->rms * self->norm_input);
 	} else {
 		*rms = -80;
 	}
@@ -146,6 +148,8 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 
 	self->t_att = 0.f;
 	self->t_rel = 0.f;
+
+	self->w_rms = 12.f / sample_rate;
 
 	Dyncomp_set_attack (self, 0.01f);
 	Dyncomp_set_release (self, 0.03f);
@@ -185,6 +189,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 	float rms = self->rms;
 
+	const float w_rms = self->w_rms;
 	const float w_att = self->w_att;
 	const float w_rel = self->w_rel;
 	const float p_thr = self->p_thr;
@@ -202,7 +207,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		v *= n_1;
 
-		rms += ((v < rms) ? w_rel : w_att) * (v - rms);
+		rms += w_rms * (v - rms);
 		za1 += w_att * (p_thr + v - za1);
 
 		if (zr1 < za1) {
