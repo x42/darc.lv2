@@ -39,16 +39,6 @@
 #define MIN(A, B) ((A) < (B)) ? (A) : (B)
 #endif
 
-struct CtrlRange {
-	float       min;
-	float       max;
-	float       dflt;
-	float       step;
-	float       mult;
-	bool        log;
-	const char* name;
-};
-
 typedef struct {
 	LV2UI_Write_Function write;
 	LV2UI_Controller     controller;
@@ -76,30 +66,47 @@ typedef struct {
 	RobTkDial* spn_ctrl[4];
 	RobTkLbl*  lbl_ctrl[4];
 
+	cairo_surface_t* dial_bg[4];
+
+	/* gain meter */
 	cairo_pattern_t* m_fg;
 	cairo_pattern_t* m_bg;
 	cairo_surface_t* m0bg;
 
+	/* gain curve/mapping */
 	cairo_surface_t* m1_grid;
 	cairo_surface_t* m1_ctrl;
 	cairo_surface_t* m1_mask;
 
-	cairo_surface_t* dial_bg[4];
+	bool ctrl_dirty; // update m1_ctrl, m1_mask
 
-	bool ctrl_dirty;
 	bool disable_signals;
 
 	const char* nfo;
 } darcUI;
 
-/* clang-format off */
+/* ****************************************************************************
+ * Control knob ranges and value mapping
+ */
+
+struct CtrlRange {
+	float       min;
+	float       max;
+	float       dflt;
+	float       step;
+	float       mult;
+	bool        log;
+	const char* name;
+};
+
 const struct CtrlRange ctrl_range[] = {
+	/* clang-format off */
 	{  -50, -10, -30, 0.1, 5, false, "Threshold" },
 	{    0,   1,   0,  72, 2, true,  "Ratio" },
 	{ .001, .1, 0.01, 100, 5, true,  "Attack" },
 	{  .03,  3,  0.3, 100, 5, true,  "Release" },
+	/* clang-format on */
 };
-/* clang-format on */
 
 static float
 ctrl_to_gui (const uint32_t c, const float v)
@@ -154,20 +161,21 @@ k_step (const uint32_t c)
 	return 1;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/* ****************************************************************************/
 
-static const float c_dlf[4] = { 0.8, 0.8, 0.8, 1.0 }; // dial faceplate fg
+static const float c_dlf[4] = { 0.8, 0.8, 0.8, 1.0 }; // custom foreground color
 
-///////////////////////////////////////////////////////////////////////////////
+/* *****************************************************************************
+ * Knob faceplates
+ */
 
-/*** knob faceplates ***/
 static void
 prepare_faceplates (darcUI* ui)
 {
 	cairo_t* cr;
 	float    xlp, ylp;
 
-	/* clang-format off */
+/* clang-format off */
 #define INIT_DIAL_SF(VAR, W, H)                                             \
   VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 2 * (W), 2 * (H)); \
   cr  = cairo_create (VAR);                                                 \
@@ -256,6 +264,10 @@ prepare_faceplates (darcUI* ui)
 #undef RESPLABLEL
 }
 
+/* *****************************************************************************
+ * Numeric value display - knob tooltips
+ */
+
 static void
 display_annotation (darcUI* ui, RobTkDial* d, cairo_t* cr, const char* txt)
 {
@@ -325,9 +337,9 @@ dial_annotation_rr (RobTkDial* d, cairo_t* cr, void* data)
 	display_annotation (ui, d, cr, txt);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-/*** knob & button callbacks ****/
+/* *****************************************************************************
+ * knob & button callbacks
+ */
 
 static bool
 cb_spn_ctrl (RobWidget* w, void* handle)
@@ -353,7 +365,9 @@ cb_spn_ctrl (RobWidget* w, void* handle)
 	return TRUE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/* *****************************************************************************
+ * Gain Meter Display
+ */
 
 #define M0HEIGHT 36
 
@@ -525,7 +539,7 @@ m0_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	return TRUE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/* ****************************************************************************/
 
 static float
 comp_curve (float in, float threshold, float ratio)
@@ -534,7 +548,7 @@ comp_curve (float in, float threshold, float ratio)
 	return /*-10/log(10)*/ -4.342944819 * ratio * g + in;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/* ****************************************************************************/
 
 #define M1RECT 260
 
@@ -762,7 +776,7 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	return TRUE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/* ****************************************************************************/
 
 static RobWidget*
 toplevel (darcUI* ui, void* const top)
@@ -797,7 +811,6 @@ toplevel (darcUI* ui, void* const top)
 
 #define GSP_W(PTR) robtk_dial_widget (PTR)
 #define GLB_W(PTR) robtk_lbl_widget (PTR)
-#define GSL_W(PTR) robtk_select_widget (PTR)
 
 	for (uint32_t i = 0; i < 4; ++i) {
 		ui->lbl_ctrl[i] = robtk_lbl_new (ctrl_range[i].name);
@@ -902,7 +915,7 @@ gui_cleanup (darcUI* ui)
 	rob_box_destroy (ui->rw);
 }
 
-/******************************************************************************
+/* *****************************************************************************
  * RobTk + LV2
  */
 
@@ -961,6 +974,7 @@ instantiate (
 	ui->nfo             = robtk_info (ui_toplevel);
 	ui->write           = write_function;
 	ui->controller      = controller;
+	ui->ctrl_dirty      = false;
 	ui->disable_signals = true;
 	*widget             = toplevel (ui, ui_toplevel);
 	ui->disable_signals = false;

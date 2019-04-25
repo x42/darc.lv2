@@ -1,6 +1,7 @@
 /* darc.lv2
  *
  * Copyright (C) 2018,2019 Robin Gareus <robin@gareus.org>
+ * inspired by Fons Adriaensen's zita-dc1
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,7 +206,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		pg = expf (pg);
 
-		/* apply gain factor to  all channels */
+		/* apply gain factor to all channels */
 		for (uint32_t i = 0; i < nc; ++i) {
 			out[i][j] = pg * inp[i][j];
 		}
@@ -363,6 +364,8 @@ cleanup (LV2_Handle instance)
 #endif
 	free (instance);
 }
+
+/* ****************************************************************************/
 
 #ifdef WITH_SIGNATURE
 #define RTK_URI DARC_URI
