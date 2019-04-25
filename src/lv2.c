@@ -117,8 +117,8 @@ Dyncomp_set_release (Dyncomp* self, float r)
 void
 Dyncomp_get_gain (Dyncomp* self, float* gmin, float* gmax, float* rms)
 {
-	*gmin = (self->gmin > .1f) ? 20.f * log10f (self->gmin) : -20.f;
-	*gmax = (self->gmax > .1f) ? 20.f * log10f (self->gmax) : -20.f;
+	*gmin = self->gmin * 8.68589f; /* 20 / log(10) */
+	*gmax = self->gmax * 8.68589f;
 	if (self->rms > 1e-8f) {
 		*rms = 10.f * log10f (self->rms * self->norm_input);
 	} else {
@@ -153,8 +153,8 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 	/* reset min/max gain report */
 	if (self->newg) {
-		gmax       = 0.f
-		gmin       = 0.f;
+		gmax       = -100.0f;
+		gmin       = 100.0f;
 		self->newg = false;
 	} else {
 		gmax = self->gmax;
@@ -197,7 +197,6 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		v *= n_1;
 
 		rms += ((v < rms) ? w_rel : w_att) * (v - rms);
-
 		za1 += w_att * (p_thr + v - za1);
 
 		if (zr1 < za1) {
@@ -214,13 +213,16 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		r += dr;
 
-		float g = powf (20.0f * zr2, -r);
-		gmax = fmaxf (gmax, g);
-		gmin = fminf (gmin, g);
+		float pg = -r * logf (20.0f * zr2);
+
+		gmax = fmaxf (gmax, pg);
+		gmin = fminf (gmin, pg);
+
+		pg = expf (pg);
 
 		/* apply gain factor to all channels */
 		for (uint32_t i = 0; i < nc; ++i) {
-			out[i][j] = g * inp[i][j];
+			out[i][j] = pg * inp[i][j];
 		}
 	}
 
@@ -341,8 +343,8 @@ run (LV2_Handle instance, uint32_t n_samples)
 		self->samplecnt -= self->sampletme;
 		Dyncomp_get_gain (&self->dyncomp, &self->_gmin, &self->_gmax, &self->_rms);
 
-		self->_gmin = fminf (40.f, self->_gmin);
-		self->_gmax = fminf (40.f, self->_gmax);
+		self->_gmin = fminf (40.f, fmaxf (-20.f, self->_gmin));
+		self->_gmax = fminf (40.f, fmaxf (-20.f, self->_gmax));
 		self->_rms  = fminf (0.f, fmaxf (-80.f, self->_rms));
 
 #ifdef DISPLAY_INTERFACE
