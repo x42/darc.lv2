@@ -56,6 +56,9 @@ typedef struct {
 	float w_att;
 	float w_rel;
 
+	float t_att;
+	float t_rel;
+
 	float za1;
 	float zr1;
 	float zr2;
@@ -94,12 +97,20 @@ Dyncomp_set_threshold (Dyncomp* self, float t)
 void
 Dyncomp_set_attack (Dyncomp* self, float a)
 {
+	if (a == self->t_att) {
+		return;
+	}
+	self->t_att = a;
 	self->w_att = 0.5f / (self->sample_rate * a);
 }
 
 void
 Dyncomp_set_release (Dyncomp* self, float r)
 {
+	if (r == self->t_rel) {
+		return;
+	}
+	self->t_rel = r;
 	self->w_rel = 3.5f / (self->sample_rate * r);
 }
 
@@ -126,6 +137,9 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 	self->rat   = 0.f;
 	self->rat1  = 0.f;
 	self->p_thr = 0.05f;
+
+	self->t_att = 0.f;
+	self->t_rel = 0.f;
 
 	Dyncomp_set_attack (self, 0.01f);
 	Dyncomp_set_release (self, 0.03f);
