@@ -107,7 +107,7 @@ Dyncomp_get_gain (Dyncomp* self, float* gmin, float* gmax, float* rms)
 {
 	*gmin = self->gmin * 8.68589f; /* 20 / log(10) */
 	*gmax = self->gmax * 8.68589f;
-	if (self->rms > 0) {
+	if (self->rms > 1e-8f) {
 		*rms = 10.f * log10f (self->rms * self->norm_input);
 	} else {
 		*rms = -80;
@@ -181,7 +181,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		v *= n_1;
 
-		rms += w_rel * (v - rms);
+		rms += ((v < rms) ? w_rel : w_att) * (v - rms);
 		za1 += w_att * (p_thr + v - za1);
 
 		if (zr1 < za1) {
