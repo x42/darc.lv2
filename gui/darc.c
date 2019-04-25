@@ -65,6 +65,7 @@ typedef struct {
 	/* control knobs */
 	RobTkDial* spn_ctrl[4];
 	RobTkLbl*  lbl_ctrl[4];
+	RobTkCBtn* btn_hold;
 
 	cairo_surface_t* dial_bg[4];
 
@@ -365,6 +366,23 @@ cb_spn_ctrl (RobWidget* w, void* handle)
 	return TRUE;
 }
 
+static bool
+cb_btn_hold (RobWidget* w, void* handle)
+{
+	darcUI* ui = (darcUI*)handle;
+
+	ui->ctrl_dirty = true;
+	queue_draw (ui->m1);
+
+	if (ui->disable_signals) {
+		return TRUE;
+	}
+
+	const float val = robtk_cbtn_get_active (ui->btn_hold) ? 1.f : 0.f;
+	ui->write (ui->controller, DARC_HOLD, sizeof (float), 0, (const void*)&val);
+	return TRUE;
+}
+
 /* *****************************************************************************
  * Gain Meter Display
  */
@@ -542,9 +560,13 @@ m0_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 /* ****************************************************************************/
 
 static float
-comp_curve (float in, float threshold, float ratio)
+comp_curve (float in, float threshold, float ratio, bool hold)
 {
-	float g = log (pow (10.0, 1. + 0.1 * threshold) + pow (10.0, 1. + 0.1 * in));
+	float key = in;
+	if (hold && in < threshold) {
+		key = threshold;
+	}
+	float g = log (pow (10.0, 1. + 0.1 * threshold) + pow (10.0, 1. + 0.1 * key));
 	return /*-10/log(10)*/ -4.342944819 * ratio * g + in;
 }
 
@@ -690,16 +712,51 @@ m1_render_mask (darcUI* ui)
 
 	const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
 	const float ratio = gui_to_ctrl (1, robtk_dial_get_value (ui->spn_ctrl[1]));
+	const bool  hold  = robtk_cbtn_get_active (ui->btn_hold);
 
 	cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
 	cairo_set_line_width (cr, 1.0);
 
-	cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio) - 10) / -70.f));
-	cairo_move_to (cm, 0, M1RECT * ((comp_curve (-60, thrsh, ratio) - 10) / -70.f));
+	if (hold) {
+		cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, false) - 10) / -70.f));
+
+		uint32_t x = 1;
+		for (; x <= M1RECT; ++x) {
+			const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
+			const float y_db = comp_curve (x_db, thrsh, ratio, false) - 10;
+			const float y    = M1RECT * (y_db / -70.f);
+			cairo_line_to (cr, x, y);
+			if (x_db > thrsh) {
+				break;
+			}
+		}
+
+		const double dash1[] = { 1, 2, 4, 2 };
+		cairo_set_dash (cr, dash1, 4, 0);
+		cairo_stroke_preserve (cr);
+		cairo_set_dash (cr, NULL, 0, 0);
+
+		for (; x > 0; --x) {
+			const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
+			const float y_db = comp_curve (x_db, thrsh, ratio, true) - 10;
+			const float y    = M1RECT * (y_db / -70.f);
+			cairo_line_to (cr, x, y);
+		}
+
+		cairo_close_path (cr);
+
+		cairo_set_source_rgba (cr, 0, 0, .5, .5);
+		cairo_fill (cr);
+	}
+
+	cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, hold) - 10) / -70.f));
+	cairo_move_to (cm, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, hold) - 10) / -70.f));
+
+	cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
 
 	for (uint32_t x = 1; x <= M1RECT; ++x) {
 		const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
-		const float y_db = comp_curve (x_db, thrsh, ratio) - 10;
+		const float y_db = comp_curve (x_db, thrsh, ratio, hold) - 10;
 		const float y    = M1RECT * (y_db / -70.f);
 		cairo_line_to (cr, x, y);
 		cairo_line_to (cm, x, y);
@@ -812,11 +869,12 @@ toplevel (darcUI* ui, void* const top)
 	robwidget_set_size_allocate (ui->m1, m1_size_allocate);
 
 	/* control knob table */
-	ui->ctbl      = rob_table_new (/*rows*/ 2, /*cols*/ 5, FALSE);
+	ui->ctbl      = rob_table_new (/*rows*/ 3, /*cols*/ 5, FALSE);
 	ui->ctbl->top = (void*)ui;
 
 #define GSP_W(PTR) robtk_dial_widget (PTR)
 #define GLB_W(PTR) robtk_lbl_widget (PTR)
+#define GBT_W(PTR) robtk_cbtn_widget (PTR)
 
 	for (uint32_t i = 0; i < 4; ++i) {
 		ui->lbl_ctrl[i] = robtk_lbl_new (ctrl_range[i].name);
@@ -877,6 +935,15 @@ toplevel (darcUI* ui, void* const top)
 		        ui->spn_ctrl[3]->dcol[0][2] = .05;
 	}
 
+	/* explicit hold button */
+	ui->btn_hold = robtk_cbtn_new ("Hold Gain at Threshold on Release", GBT_LED_LEFT, false);
+	robtk_cbtn_set_callback (ui->btn_hold, cb_btn_hold, ui);
+	rob_table_attach (ui->ctbl, GBT_W (ui->btn_hold), 0, 4, 3, 4, 8, 2, RTK_EXANDF, RTK_SHRINK);
+
+	robtk_cbtn_set_temporary_mode (ui->btn_hold, 1);
+	robtk_cbtn_set_color_on (ui->btn_hold, 0.1, 0.3, 0.8);
+	robtk_cbtn_set_color_off (ui->btn_hold, .1, .1, .3);
+
 	/* top-level packing */
 	rob_vbox_child_pack (ui->rw, ui->m1, FALSE, TRUE);
 	rob_vbox_child_pack (ui->rw, ui->ctbl, FALSE, TRUE);
@@ -915,6 +982,7 @@ gui_cleanup (darcUI* ui)
 		cairo_surface_destroy (ui->m1_mask);
 	}
 
+	robtk_cbtn_destroy (ui->btn_hold);
 	robwidget_destroy (ui->m0);
 	robwidget_destroy (ui->m1);
 	rob_table_destroy (ui->ctbl);
@@ -1035,6 +1103,10 @@ port_event (LV2UI_Handle handle,
 	} else if (port_index == DARC_RMS) {
 		ui->_rms = *(float*)buffer;
 		queue_draw (ui->m1);
+	} else if (port_index == DARC_HOLD) {
+		ui->disable_signals = true;
+		robtk_cbtn_set_active (ui->btn_hold, (*(float*)buffer) > 0);
+		ui->disable_signals = false;
 	} else if (port_index >= DARC_THRESHOLD && port_index <= DARC_RELEASE) {
 		const float v       = *(float*)buffer;
 		ui->disable_signals = true;

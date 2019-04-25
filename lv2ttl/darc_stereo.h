@@ -10,9 +10,10 @@ static const RtkLv2Description _plugin_stereo = {
 	, 1 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "x42-comp - Dynamic Compressor Stereo" // const char *plugin_human_id
-	, (const struct LV2Port[12])
+	, (const struct LV2Port[13])
 	{
 		{ "enable", CONTROL_IN, 1.000000, 0.000000, 1.000000, "Enable"},
+		{ "hold", CONTROL_IN, 0.000000, 0.000000, 1.000000, "Hold"},
 		{ "threshold", CONTROL_IN, -30.000000, -50.000000, -10.000000, "Threshold"},
 		{ "Ratio", CONTROL_IN, 0.000000, 0.000000, 1.000000, "Ratio"},
 		{ "attack", CONTROL_IN, 0.010000, 0.001000, 0.100000, "Attack Time"},
@@ -25,15 +26,15 @@ static const RtkLv2Description _plugin_stereo = {
 		{ "inR", AUDIO_IN, nan, nan, nan, "In Right"},
 		{ "outR", AUDIO_OUT, nan, nan, nan, "Out Right"},
 	}
-	, 12 // uint32_t nports_total
+	, 13 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in
 	, 2 // uint32_t nports_audio_out
 	, 0 // uint32_t nports_midi_in
 	, 0 // uint32_t nports_midi_out
 	, 0 // uint32_t nports_atom_in
 	, 0 // uint32_t nports_atom_out
-	, 8 // uint32_t nports_ctrl
-	, 5 // uint32_t nports_ctrl_in
+	, 9 // uint32_t nports_ctrl
+	, 6 // uint32_t nports_ctrl_in
 	, 3 // uint32_t nports_ctrl_out
 	, 8192 // uint32_t min_atom_bufsiz
 	, false // bool send_time_info

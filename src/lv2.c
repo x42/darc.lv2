@@ -52,6 +52,8 @@ typedef struct {
 	float rat;
 	float rat1;
 
+	bool hold;
+
 	float p_thr;
 	float w_att;
 	float w_rel;
@@ -103,6 +105,12 @@ Dyncomp_set_threshold (Dyncomp* self, float t)
 }
 
 static inline void
+Dyncomp_set_hold (Dyncomp* self, bool hold)
+{
+	self->hold = hold;
+}
+
+static inline void
 Dyncomp_set_attack (Dyncomp* self, float a)
 {
 	if (a == self->t_att) {
@@ -146,6 +154,8 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 	self->rat1  = 0.f;
 	self->l_thr = -10.f;
 	self->p_thr = 0.05f;
+
+	self->hold = false;
 
 	self->t_att = 0.f;
 	self->t_rel = 0.f;
@@ -195,6 +205,8 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	const float w_rel = self->w_rel;
 	const float p_thr = self->p_thr;
 
+	const float p_hold = self->hold ? 2.f * p_thr : 0.f;
+
 	const uint32_t nc  = self->n_channels;
 	const float    n_1 = self->norm_input;
 
@@ -211,16 +223,19 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		rms += w_rms * (v - rms);
 		za1 += w_att * (p_thr + v - za1);
 
+		/* hold release */
+		const float wr = (za1 < p_hold) ? 0 : w_rel;
+
 		if (zr1 < za1) {
 			zr1 = za1;
 		} else {
-			zr1 -= w_rel * zr1;
+			zr1 -= wr * zr1;
 		}
 
 		if (zr2 < za1) {
 			zr2 = za1;
 		} else {
-			zr2 += w_rel * (zr1 - zr2);
+			zr2 += wr * (zr1 - zr2);
 		}
 
 		if (dr != 0) {
@@ -339,9 +354,11 @@ run (LV2_Handle instance, uint32_t n_samples)
 	if (enable) {
 		Dyncomp_set_threshold (&self->dyncomp, *self->_port[DARC_THRESHOLD]);
 		Dyncomp_set_ratio (&self->dyncomp, *self->_port[DARC_RATIO]);
+		Dyncomp_set_hold (&self->dyncomp, *self->_port[DARC_HOLD] > 0);
 	} else {
 		Dyncomp_set_threshold (&self->dyncomp, -10.f);
 		Dyncomp_set_ratio (&self->dyncomp, 0);
+		Dyncomp_set_hold (&self->dyncomp, false);
 	}
 
 	Dyncomp_set_attack (&self->dyncomp, *self->_port[DARC_ATTACK]);

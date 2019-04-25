@@ -4,7 +4,7 @@
 
 typedef enum {
 	DARC_ENABLE,
-
+	DARC_HOLD,
 	DARC_THRESHOLD,
 	DARC_RATIO,
 	DARC_ATTACK,
