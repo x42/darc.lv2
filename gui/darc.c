@@ -256,7 +256,7 @@ prepare_faceplates (darcUI* ui)
 	write_text_full (cr, "600", ui->font[0], xlp + 5, ylp, 0, 2, c_dlf);
 	RESPLABLEL (.83);
 	RESPLABLEL (1.0);
-	write_text_full (cr, "3s", ui->font[0], xlp - 9, ylp, 0, 3, c_dlf);
+	write_text_full (cr, "3s", ui->font[0], xlp - 6, ylp, 0, 3, c_dlf);
 	cairo_destroy (cr);
 
 #undef DIALDOTS
