@@ -718,12 +718,12 @@ m1_render_mask (darcUI* ui)
 	cairo_set_line_width (cr, 1.0);
 
 	if (hold) {
-		cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, false) - 10) / -70.f));
+		cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, true) - 10) / -70.f));
 
 		uint32_t x = 1;
 		for (; x <= M1RECT; ++x) {
 			const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
-			const float y_db = comp_curve (x_db, thrsh, ratio, false) - 10;
+			const float y_db = comp_curve (x_db, thrsh, ratio, true) - 10;
 			const float y    = M1RECT * (y_db / -70.f);
 			cairo_line_to (cr, x, y);
 			if (x_db > thrsh) {
@@ -738,7 +738,7 @@ m1_render_mask (darcUI* ui)
 
 		for (; x > 0; --x) {
 			const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
-			const float y_db = comp_curve (x_db, thrsh, ratio, true) - 10;
+			const float y_db = comp_curve (x_db, thrsh, ratio, false) - 10;
 			const float y    = M1RECT * (y_db / -70.f);
 			cairo_line_to (cr, x, y);
 		}
@@ -749,17 +749,17 @@ m1_render_mask (darcUI* ui)
 		cairo_fill (cr);
 	}
 
-	cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, hold) - 10) / -70.f));
+	cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, false) - 10) / -70.f));
 	cairo_move_to (cm, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, hold) - 10) / -70.f));
 
 	cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
 
 	for (uint32_t x = 1; x <= M1RECT; ++x) {
 		const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
-		const float y_db = comp_curve (x_db, thrsh, ratio, hold) - 10;
-		const float y    = M1RECT * (y_db / -70.f);
-		cairo_line_to (cr, x, y);
-		cairo_line_to (cm, x, y);
+		const float y_db = comp_curve (x_db, thrsh, ratio, false) - 10;
+		const float h_db = comp_curve (x_db, thrsh, ratio, hold) - 10;
+		cairo_line_to (cr, x, M1RECT * (y_db / -70.f));
+		cairo_line_to (cm, x, M1RECT * (h_db / -70.f));
 	}
 	cairo_stroke_preserve (cr);
 
@@ -812,6 +812,30 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 
 	cairo_set_source_surface (cr, ui->m1_ctrl, 0, 0);
 	cairo_paint (cr);
+
+	const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
+	const bool  hold  = robtk_cbtn_get_active (ui->btn_hold);
+
+	float thx = (thrsh + 60.f) * M1RECT / 70.f;
+	if (hold) {
+		/* shade area where hold is active */
+		cairo_save (cr);
+		cairo_rectangle (cr, 0, 0, thx, M1RECT);
+		cairo_clip (cr);
+		cairo_set_source_rgba (cr, 0.0, 0.0, .7, .1);
+		cairo_mask_surface (cr, ui->m1_mask, 0, 0);
+		cairo_fill (cr);
+		cairo_restore (cr);
+	}
+
+	cairo_set_line_width (cr, 1);
+	cairo_move_to (cr, rint (thx) - .5, M1RECT * 5.f / 70.f);
+	cairo_line_to (cr, rint (thx) - .5, M1RECT);
+	cairo_set_source_rgba (cr, .6, .6, .1, .9); // match threshold knob color
+	const double dash1[] = { 1, 1 };
+	cairo_set_dash (cr, dash1, 2, 0);
+	cairo_stroke (cr);
+	cairo_set_dash (cr, NULL, 0, 0);
 
 	float pkx = (ui->_rms + 60.f) * M1RECT / 70.f;
 	if (pkx > 0) {
@@ -936,7 +960,7 @@ toplevel (darcUI* ui, void* const top)
 	}
 
 	/* explicit hold button */
-	ui->btn_hold = robtk_cbtn_new ("Hold Gain at Threshold on Release", GBT_LED_LEFT, false);
+	ui->btn_hold = robtk_cbtn_new ("Hold Gain below Threshold", GBT_LED_LEFT, false);
 	robtk_cbtn_set_callback (ui->btn_hold, cb_btn_hold, ui);
 	rob_table_attach (ui->ctbl, GBT_W (ui->btn_hold), 0, 4, 3, 4, 8, 2, RTK_EXANDF, RTK_SHRINK);
 
