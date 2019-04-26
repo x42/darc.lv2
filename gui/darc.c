@@ -760,23 +760,23 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	if (pkx > 0) {
 		cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
 
-		const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
-		const float ratio = gui_to_ctrl (1, robtk_dial_get_value (ui->spn_ctrl[1]));
-		const float y_db  = comp_curve (ui->_rms, thrsh, ratio) - 10;
-
-		cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-		cairo_move_to (cr, pkx, M1RECT * (y_db / -70.f));
-		cairo_close_path (cr);
-		cairo_set_line_width (cr, 5);
-		cairo_set_source_rgba (cr, 1, 1, 1, 1);
-		cairo_stroke (cr);
-
+		cairo_save (cr);
 		cairo_rectangle (cr, 0, 0, pkx, M1RECT);
 		cairo_clip (cr);
-
 		cairo_set_source_rgba (cr, 0.6, 0.6, 0.6, 0.5);
 		cairo_mask_surface (cr, ui->m1_mask, 0, 0);
 		cairo_fill (cr);
+		cairo_restore (cr);
+
+		cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+
+		float pky0 = (ui->_rms + ui->_gmax - 10.f) * M1RECT / -70.f;
+		float pky1 = (ui->_rms + ui->_gmin - 10.f) * M1RECT / -70.f;
+		cairo_move_to (cr, pkx, pky0);
+		cairo_line_to (cr, pkx, pky1);
+		cairo_set_line_width (cr, 5);
+		cairo_set_source_rgba (cr, 1, 1, 1, 1);
+		cairo_stroke (cr);
 	}
 
 	return TRUE;
