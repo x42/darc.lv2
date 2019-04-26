@@ -174,9 +174,9 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	}
 
 	/* interpolate ratio */
-	float r = self->rat;
+	float       r  = self->rat;
 	const float r1 = self->rat1;
-	float dr = r1 - r;
+	float       dr = r1 - r;
 	if (fabsf (dr) < 1e-5f) {
 		r  = r1;
 		dr = 0;
