@@ -70,6 +70,7 @@ typedef struct {
 
 	float rms;
 	float w_rms;
+	float w_lpf;
 
 } Dyncomp;
 
@@ -150,6 +151,7 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 	self->t_rel = 0.f;
 
 	self->w_rms = 12.f / sample_rate;
+	self->w_lpf = 160.f / sample_rate;
 
 	Dyncomp_set_attack (self, 0.01f);
 	Dyncomp_set_release (self, 0.03f);
@@ -172,14 +174,12 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	}
 
 	/* interpolate ratio */
-	float r;
-	float dr = self->rat1 - self->rat;
+	float r = self->rat;
+	const float r1 = self->rat1;
+	float dr = r1 - r;
 	if (fabsf (dr) < 1e-5f) {
-		r  = self->rat1;
+		r  = r1;
 		dr = 0;
-	} else {
-		r = self->rat;
-		dr /= (float)n_samples;
 	}
 
 	/* localize variables */
@@ -190,6 +190,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	float rms = self->rms;
 
 	const float w_rms = self->w_rms;
+	const float w_lpf = self->w_lpf;
 	const float w_att = self->w_att;
 	const float w_rel = self->w_rel;
 	const float p_thr = self->p_thr;
@@ -222,7 +223,9 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 			zr2 += w_rel * (zr1 - zr2);
 		}
 
-		r += dr;
+		if (dr != 0) {
+			r += w_lpf * (r1 - r);
+		}
 
 		float pg = -r * logf (20.0f * zr2);
 
