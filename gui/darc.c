@@ -682,6 +682,12 @@ m1_render_mask (darcUI* ui)
 
 	cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
 
+	rounded_rectangle (cr, 0, 0, M1RECT, M1RECT, 8);
+	cairo_clip (cr);
+
+	rounded_rectangle (cm, 0, 0, M1RECT, M1RECT, 8);
+	cairo_clip (cm);
+
 	const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
 	const float ratio = gui_to_ctrl (1, robtk_dial_get_value (ui->spn_ctrl[1]));
 
