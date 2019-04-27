@@ -329,11 +329,11 @@ dial_annotation_rr (RobTkDial* d, cairo_t* cr, void* data)
 	char        txt[16];
 	const float val = gui_to_ctrl (1, d->cur);
 	if (val >= 1) {
-		snprintf (txt, 16, "1:\u221E");
+		snprintf (txt, 16, "\u221E:1");
 	} else if (val >= .9) {
-		snprintf (txt, 16, "1:%.0f", 1 / (1.f - val));
+		snprintf (txt, 16, "%.0f:1", 1 / (1.f - val));
 	} else {
-		snprintf (txt, 16, "1:%.1f", 1 / (1.f - val));
+		snprintf (txt, 16, "%.1f:1", 1 / (1.f - val));
 	}
 	display_annotation (ui, d, cr, txt);
 }
