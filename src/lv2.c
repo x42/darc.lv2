@@ -226,6 +226,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		/* hold release */
 		const float wr = (za1 < p_hold) ? 0 : w_rel;
 
+		/* Note: za1 >= p_thr; so zr1, zr2 can't become denormal */
 		if (zr1 < za1) {
 			zr1 = za1;
 		} else {
@@ -238,9 +239,19 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 			zr2 += wr * (zr1 - zr2);
 		}
 
+		/* update ratio */
 		if (dr != 0) {
 			r += w_lpf * (r1 - r);
 		}
+
+		/* Note: expf (a * logf (b)) == powf (b, a);
+		 * however powf() is significantly slower
+		 *
+		 * Effective gain is  (zr2) ^ (-ratio).
+		 *
+		 * with 0 <= ratio <= 0.5 and
+		 * zr2 being low-pass filtered RMS of the key-signal.
+		 */
 
 		float pg = -r * logf (20.0f * zr2);
 
