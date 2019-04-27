@@ -417,10 +417,13 @@ tooltip_overlay (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
 	rounded_rectangle (cr, 0, top, rw->area.width, ui->tt_pos->y - top, 3);
 	cairo_set_source_rgba (cr, 0, 0, 0, .7);
 	cairo_fill (cr);
-	rounded_rectangle (cr, ui->tt_pos->x, ui->tt_pos->y,
-	                   ui->tt_pos->width, ui->tt_pos->height, 3);
-	cairo_set_source_rgba (cr, 1, 1, 1, .5);
-	cairo_fill (cr);
+
+	if (ui->tt_id < 4) {
+		rounded_rectangle (cr, ui->tt_pos->x, ui->tt_pos->y,
+		                   ui->tt_pos->width + 2, ui->tt_pos->height + 1, 3);
+		cairo_set_source_rgba (cr, 1, 1, 1, .5);
+		cairo_fill (cr);
+	}
 
 	const float*          color = c_wht;
 	PangoFontDescription* font  = pango_font_description_from_string ("Sans 11px");
