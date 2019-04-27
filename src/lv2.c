@@ -224,19 +224,19 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		za1 += w_att * (p_thr + v - za1);
 
 		/* hold release */
-		const float wr = (za1 < p_hold) ? 0 : w_rel;
+		const bool hold = (za1 < p_hold);
 
 		/* Note: za1 >= p_thr; so zr1, zr2 can't become denormal */
 		if (zr1 < za1) {
 			zr1 = za1;
-		} else {
-			zr1 -= wr * zr1;
+		} else if (!hold) {
+			zr1 -= w_rel * zr1;
 		}
 
 		if (zr2 < za1) {
 			zr2 = za1;
-		} else {
-			zr2 += wr * (zr1 - zr2);
+		} else if (!hold) {
+			zr2 += w_rel * (zr1 - zr2);
 		}
 
 		/* update ratio */
