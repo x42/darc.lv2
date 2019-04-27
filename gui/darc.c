@@ -911,6 +911,8 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	cairo_set_source_surface (cr, ui->m1_ctrl, 0, 0);
 	cairo_paint (cr);
 
+	cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
+
 	const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
 	const bool  hold  = robtk_cbtn_get_active (ui->btn_hold);
 
@@ -927,8 +929,8 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	}
 
 	cairo_set_line_width (cr, 1);
-	cairo_move_to (cr, rint (thx) - .5, M1RECT * 5.f / 70.f);
-	cairo_line_to (cr, rint (thx) - .5, M1RECT);
+	cairo_move_to (cr, floor (thx) - .5, M1RECT * 9.f / 70.f);
+	cairo_line_to (cr, floor (thx) - .5, M1RECT);
 	cairo_set_source_rgba (cr, .6, .6, .1, .9); // match threshold knob color
 	const double dash1[] = { 1, 1 };
 	cairo_set_dash (cr, dash1, 2, 0);
@@ -937,8 +939,6 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 
 	float pkx = (ui->_rms + 60.f) * M1RECT / 70.f;
 	if (pkx > 0) {
-		cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
-
 		cairo_save (cr);
 		cairo_rectangle (cr, 0, 0, pkx, M1RECT);
 		cairo_clip (cr);
