@@ -273,7 +273,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	self->rat  = r;
 	self->gmax = gmax;
 	self->gmin = gmin;
-	self->rms  = rms;
+	self->rms  = rms + 1e-12; // + denormal protection
 }
 
 /* ****************************************************************************/
