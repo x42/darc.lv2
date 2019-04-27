@@ -81,6 +81,12 @@ typedef struct {
 
 	bool ctrl_dirty; // update m1_ctrl, m1_mask
 
+	/* tooltips */
+	int                tt_id;
+	int                tt_timeout;
+	cairo_rectangle_t* tt_pos;
+	cairo_rectangle_t* tt_box;
+
 	bool disable_signals;
 
 	const char* nfo;
@@ -107,6 +113,14 @@ const struct CtrlRange ctrl_range[] = {
 	{ .001, .1, 0.01, 100, 5, true,  "Attack" },
 	{  .03,  3,  0.3, 100, 5, true,  "Release" },
 	/* clang-format on */
+};
+
+static const char* tooltips[] = {
+	"<markup><b>Threshold.</b> Signal level (RMS) at which\nthe compression effect is engaged.</markup>",
+	"<markup><b>Ratio.</b> The amount of gain or attenuation to be\napplied (dB/dB above threshold).\nUnity is retained at -10dBFS/RMS\n(auto makeup-gain).</markup>",
+	"<markup><b>Attack time.</b> Time it takes for the signal\nto become fully compressed after\nexceeding the threshold.</markup>",
+	"<markup><b>Release time.</b> Minimum recovery time\nto uncompressed signal-level\nafter falling below threshold.</markup>",
+	"<markup><b>Hold.</b> Retain current attenuation when the signal\nsubceeds the threshold.\nThis prevent modulation of the noise-floor\nand counter-acts 'pumping'.</markup>",
 };
 
 static float
@@ -381,6 +395,90 @@ cb_btn_hold (RobWidget* w, void* handle)
 	const float val = robtk_cbtn_get_active (ui->btn_hold) ? 1.f : 0.f;
 	ui->write (ui->controller, DARC_HOLD, sizeof (float), 0, (const void*)&val);
 	return TRUE;
+}
+
+/* *****************************************************************************
+ * Tooltip & Help Overlay
+ */
+
+static bool
+tooltip_overlay (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
+{
+	darcUI* ui = (darcUI*)rw->top;
+	assert (ui->tt_id >= 0 && ui->tt_id < 5);
+
+	cairo_save (cr);
+	rcontainer_expose_event (rw, cr, ev);
+	cairo_restore (cr);
+
+	const float top = ui->tt_box->y;
+	rounded_rectangle (cr, 0, top, rw->area.width, ui->tt_pos->y - top, 3);
+	cairo_set_source_rgba (cr, 0, 0, 0, .7);
+	cairo_fill (cr);
+	rounded_rectangle (cr, ui->tt_pos->x, ui->tt_pos->y,
+	                   ui->tt_pos->width, ui->tt_pos->height, 3);
+	cairo_set_source_rgba (cr, 1, 1, 1, .5);
+	cairo_fill (cr);
+
+	const float*          color = c_wht;
+	PangoFontDescription* font  = pango_font_description_from_string ("Sans 11px");
+
+	const float xp = .5 * rw->area.width;
+	const float yp = .5 * (ui->tt_pos->y - top);
+
+	cairo_save (cr);
+	cairo_scale (cr, rw->widget_scale, rw->widget_scale);
+	write_text_full (cr, tooltips[ui->tt_id], font,
+	                 xp / rw->widget_scale, yp / rw->widget_scale,
+	                 0, 2, color);
+	cairo_restore (cr);
+
+	pango_font_description_free (font);
+
+	return TRUE;
+}
+
+static bool
+tooltip_cnt (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
+{
+	darcUI* ui = (darcUI*)rw->top;
+	if (++ui->tt_timeout < 12) {
+		rcontainer_expose_event (rw, cr, ev);
+		queue_draw (rw);
+	} else {
+		rw->expose_event = tooltip_overlay;
+		tooltip_overlay (rw, cr, ev);
+	}
+	return TRUE;
+}
+
+static void
+ttip_handler (RobWidget* rw, bool on, void* handle)
+{
+	darcUI* ui     = (darcUI*)handle;
+	ui->tt_id      = -1;
+	ui->tt_timeout = 0;
+
+	for (int i = 0; i < 4; ++i) {
+		if (rw == ui->lbl_ctrl[i]->rw) {
+			ui->tt_id = i;
+			break;
+		}
+	}
+	if (rw == ui->btn_hold->rw) {
+			ui->tt_id = 4;
+	}
+
+	if (on && ui->tt_id >= 0) {
+		ui->tt_pos             = &rw->area;
+		ui->tt_box             = &ui->spn_ctrl[0]->rw->area;
+		ui->ctbl->expose_event = tooltip_cnt;
+		queue_draw (ui->ctbl);
+	} else {
+		ui->ctbl->expose_event    = rcontainer_expose_event;
+		ui->ctbl->parent->resized = TRUE; // full re-expose
+		queue_draw (ui->rw);
+	}
 }
 
 /* *****************************************************************************
@@ -917,6 +1015,7 @@ toplevel (darcUI* ui, void* const top)
 		}
 
 		robtk_dial_set_scaled_surface_scale (ui->spn_ctrl[i], ui->dial_bg[i], 2.0);
+		robtk_lbl_annotation_callback (ui->lbl_ctrl[i], ttip_handler, ui);
 
 		rob_table_attach (ui->ctbl, GSP_W (ui->spn_ctrl[i]), i, i + 1, 0, 1, 4, 0, RTK_EXANDF, RTK_SHRINK);
 		rob_table_attach (ui->ctbl, GLB_W (ui->lbl_ctrl[i]), i, i + 1, 1, 2, 4, 0, RTK_EXANDF, RTK_SHRINK);
@@ -967,6 +1066,7 @@ toplevel (darcUI* ui, void* const top)
 	robtk_cbtn_set_temporary_mode (ui->btn_hold, 1);
 	robtk_cbtn_set_color_on (ui->btn_hold, 0.1, 0.3, 0.8);
 	robtk_cbtn_set_color_off (ui->btn_hold, .1, .1, .3);
+	robtk_cbtn_annotation_callback (ui->btn_hold, ttip_handler, ui);
 
 	/* top-level packing */
 	rob_vbox_child_pack (ui->rw, ui->m1, FALSE, TRUE);
