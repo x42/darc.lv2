@@ -120,7 +120,7 @@ static const char* tooltips[] = {
 	"<markup><b>Ratio.</b> The amount of gain or attenuation to be\napplied (dB/dB above threshold).\nUnity is retained at -10dBFS/RMS\n(auto makeup-gain).</markup>",
 	"<markup><b>Attack time.</b> Time it takes for the signal\nto become fully compressed after\nexceeding the threshold.</markup>",
 	"<markup><b>Release time.</b> Minimum recovery time\nto uncompressed signal-level\nafter falling below threshold.</markup>",
-	"<markup><b>Hold.</b> Retain current attenuation when the signal\nsubceeds the threshold.\nThis prevent modulation of the noise-floor\nand counter-acts 'pumping'.</markup>",
+	"<markup><b>Hold.</b> Retain current attenuation when the signal\nsubceeds the threshold.\nThis prevents modulation of the noise-floor\nand can counter-act 'pumping'.</markup>",
 };
 
 static float
@@ -343,11 +343,11 @@ dial_annotation_rr (RobTkDial* d, cairo_t* cr, void* data)
 	char        txt[16];
 	const float val = gui_to_ctrl (1, d->cur);
 	if (val >= 1) {
-		snprintf (txt, 16, "\u221E:1");
+		snprintf (txt, 16, "\u221E : 1");
 	} else if (val >= .9) {
-		snprintf (txt, 16, "%.0f:1", 1 / (1.f - val));
+		snprintf (txt, 16, "%.0f : 1", 1 / (1.f - val));
 	} else {
-		snprintf (txt, 16, "%.1f:1", 1 / (1.f - val));
+		snprintf (txt, 16, "%.1f : 1", 1 / (1.f - val));
 	}
 	display_annotation (ui, d, cr, txt);
 }
@@ -408,7 +408,9 @@ tooltip_overlay (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
 	assert (ui->tt_id >= 0 && ui->tt_id < 5);
 
 	cairo_save (cr);
-	rcontainer_expose_event (rw, cr, ev);
+	cairo_rectangle_t event = { 0, 0, rw->area.width, rw->area.height };
+	rcontainer_clear_bg (rw, cr, &event);
+	rcontainer_expose_event (rw, cr, &event);
 	cairo_restore (cr);
 
 	const float top = ui->tt_box->y;
