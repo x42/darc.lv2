@@ -672,7 +672,7 @@ comp_curve (float in, float threshold, float ratio, bool hold)
 
 /* ****************************************************************************/
 
-#define M1RECT 260
+#define M1RECT 280
 
 static void
 m1_size_request (RobWidget* handle, int* w, int* h)
@@ -723,13 +723,13 @@ m1_render_grid (darcUI* ui, cairo_t* cr)
 
 	const double dash1[] = { 1, 2 };
 	const double dash2[] = { 1, 3 };
-	cairo_save (cr);
+
 	cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
 	cairo_set_dash (cr, dash2, 2, 2);
 
 	for (uint32_t d = 1; d < 7; ++d) {
-		const float x = -.5 + floorf (M1RECT * (d * 10.f / 70.f));
-		const float y = -.5 + floorf (M1RECT * (d * 10.f / 70.f));
+		const float x = -.5 + floor (M1RECT * d * 10.f / 70.f);
+		const float y = -.5 + floor (M1RECT * (70 - d * 10.f) / 70.f);
 
 		cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
 
@@ -741,35 +741,30 @@ m1_render_grid (darcUI* ui, cairo_t* cr)
 		cairo_line_to (cr, M1RECT, y);
 		cairo_stroke (cr);
 
-		int          tw, th;
-		PangoLayout* pl = pango_cairo_create_layout (cr);
-		pango_layout_set_font_description (pl, ui->font[1]);
 		char txt[16];
 		snprintf (txt, 16, "%+2d", -60 + d * 10);
-		pango_layout_set_text (pl, txt, -1);
-		pango_layout_get_pixel_size (pl, &tw, &th);
-		cairo_move_to (cr, x - tw * .5, (M1RECT * (10.f / 70.f) - th - 2));
-		CairoSetSouerceRGBA (c_dlf);
-		pango_cairo_show_layout (cr, pl);
-		g_object_unref (pl);
+		write_text_full (cr, txt, ui->font[1], x, M1RECT * (10.f / 70.f) - 2, 0, 5, c_dlf);
+		if (d != 6) {
+			write_text_full (cr, txt, ui->font[1], M1RECT * (60.f / 70.f) + 2, y, M_PI * .5, 5, c_dlf);
+		}
 	}
 
+	/* diagonal unity */
 	cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 1.0);
 	cairo_set_dash (cr, dash1, 2, 2);
-
-	/* diagonal unity */
 	cairo_move_to (cr, 0, M1RECT);
 	cairo_line_to (cr, M1RECT, 0);
 	cairo_stroke (cr);
-	cairo_restore (cr);
 
-	write_text_full (cr, "Output", ui->font[0], M1RECT * (60.f / 70.f), M1RECT * .5, M_PI * .5, 5, c_dlf);
+	cairo_set_dash (cr, 0, 0, 0);
+
+	write_text_full (cr, "Output", ui->font[0], M1RECT * (65.f / 70.f), M1RECT * .5, M_PI * .5, 5, c_dlf);
 	write_text_full (cr, "Input [dBFS/RMS]", ui->font[0], M1RECT * .5, 5, 0, 8, c_dlf);
 
 	/* 0dBFS limit indicator */
 	cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
-	const float x = -.5 + floorf (M1RECT * (60.f / 70.f));
-	const float y = -.5 + floorf (M1RECT * (10.f / 70.f));
+	const float x = -.5 + floor (M1RECT * 60.f / 70.f);
+	const float y = -.5 + floor (M1RECT * 10.f / 70.f);
 	cairo_move_to (cr, x, 0);
 	cairo_line_to (cr, x, M1RECT);
 	cairo_stroke (cr);
