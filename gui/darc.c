@@ -1224,10 +1224,13 @@ port_event (LV2UI_Handle handle,
 
 	if (port_index == DARC_GMIN) {
 		ui->_gmin = *(float*)buffer;
+		/* TODO: partial exposure, only redraw changed gain area */
 		queue_draw (ui->m0);
+		queue_draw (ui->m1);
 	} else if (port_index == DARC_GMAX) {
 		ui->_gmax = *(float*)buffer;
 		queue_draw (ui->m0);
+		queue_draw (ui->m1);
 	} else if (port_index == DARC_RMS) {
 		ui->_rms = *(float*)buffer;
 		queue_draw (ui->m1);
