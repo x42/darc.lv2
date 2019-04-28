@@ -89,6 +89,7 @@ typedef struct {
 
 	bool disable_signals;
 
+	RobWidget*  m2;
 	const char* nfo;
 } darcUI;
 
@@ -967,6 +968,43 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 
 /* ****************************************************************************/
 
+static void
+m2_size_request (RobWidget* handle, int* w, int* h)
+{
+	*w = 12;
+	*h = 10;
+}
+
+static void
+m2_size_allocate (RobWidget* rw, int w, int h)
+{
+	robwidget_set_size (rw, w, h);
+}
+
+static bool
+m2_expose_event (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
+{
+	darcUI* ui = (darcUI*)GET_HANDLE (rw);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+	cairo_clip (cr);
+	cairo_rectangle (cr, 0, 0, rw->area.width, rw->area.height);
+	cairo_clip_preserve (cr);
+
+	float c[4];
+	get_color_from_theme (1, c);
+	cairo_set_source_rgb (cr, c[0], c[1], c[2]);
+	cairo_fill (cr);
+
+	cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
+	if (ui->nfo) {
+		write_text_full (cr, ui->nfo, ui->font[0], 0, .5 * rw->area.height / ui->rw->widget_scale, 0, 3, c_gry);
+	}
+	return TRUE;
+}
+
+/* ****************************************************************************/
+
 static RobWidget*
 toplevel (darcUI* ui, void* const top)
 {
@@ -1063,14 +1101,24 @@ toplevel (darcUI* ui, void* const top)
 	}
 
 	/* explicit hold button */
-	ui->btn_hold = robtk_cbtn_new ("Hold Gain below Threshold", GBT_LED_LEFT, false);
+	ui->btn_hold = robtk_cbtn_new ("Hold", GBT_LED_RIGHT, false);
 	robtk_cbtn_set_callback (ui->btn_hold, cb_btn_hold, ui);
-	rob_table_attach (ui->ctbl, GBT_W (ui->btn_hold), 0, 4, 3, 4, 8, 2, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach (ui->ctbl, GBT_W (ui->btn_hold), 3, 4, 3, 4, 8, 2, RTK_EXANDF, RTK_SHRINK);
 
 	robtk_cbtn_set_temporary_mode (ui->btn_hold, 1);
 	robtk_cbtn_set_color_on (ui->btn_hold, 0.1, 0.3, 0.8);
 	robtk_cbtn_set_color_off (ui->btn_hold, .1, .1, .3);
 	robtk_cbtn_annotation_callback (ui->btn_hold, ttip_handler, ui);
+
+	/* version info */
+
+	ui->m2 = robwidget_new (ui);
+	robwidget_set_alignment (ui->m2, 0, 0);
+	robwidget_set_expose_event (ui->m2, m2_expose_event);
+	robwidget_set_size_request (ui->m2, m2_size_request);
+	robwidget_set_size_allocate (ui->m2, m2_size_allocate);
+
+	rob_table_attach (ui->ctbl, ui->m2, 0, 2, 3, 4, 8, 2, RTK_FILL, RTK_FILL);
 
 	/* top-level packing */
 	rob_vbox_child_pack (ui->rw, ui->m1, FALSE, TRUE);
@@ -1113,6 +1161,7 @@ gui_cleanup (darcUI* ui)
 	robtk_cbtn_destroy (ui->btn_hold);
 	robwidget_destroy (ui->m0);
 	robwidget_destroy (ui->m1);
+	robwidget_destroy (ui->m2);
 	rob_table_destroy (ui->ctbl);
 	rob_box_destroy (ui->rw);
 }
