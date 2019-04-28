@@ -340,6 +340,7 @@ instantiate (const LV2_Descriptor*     descriptor,
 
 	Dyncomp_init (&self->dyncomp, rate, n_channels);
 	self->sampletme = ceilf (rate * 0.05); // 50ms
+	self->samplecnt = self->sampletme;
 
 	return (LV2_Handle)self;
 }
@@ -360,6 +361,7 @@ activate (LV2_Handle instance)
 {
 	Darc* self = (Darc*)instance;
 	Dyncomp_reset (&self->dyncomp);
+	self->samplecnt = self->sampletme;
 }
 
 static void
