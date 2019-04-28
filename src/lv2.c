@@ -105,6 +105,7 @@ Dyncomp_set_threshold (Dyncomp* self, float t)
 		return;
 	}
 	self->l_thr = t;
+	/* Note that this is signal-power, hence .5 * 10^(x/10) */
 #ifdef __USE_GNU
 	self->p_thr = 0.5f * exp10f (0.1f * t);
 #else
@@ -258,7 +259,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		 * Effective gain is  (zr2) ^ (-ratio).
 		 *
 		 * with 0 <= ratio <= 0.5 and
-		 * zr2 being low-pass filtered RMS of the key-signal.
+		 * zr2 being low-pass (attack/release) filtered square of the key-signal.
 		 */
 
 		float pg = -r * logf (20.0f * zr2);
