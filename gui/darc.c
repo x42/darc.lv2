@@ -471,7 +471,7 @@ ttip_handler (RobWidget* rw, bool on, void* handle)
 		}
 	}
 	if (rw == ui->btn_hold->rw) {
-			ui->tt_id = 4;
+		ui->tt_id = 4;
 	}
 
 	if (on && ui->tt_id >= 0) {
