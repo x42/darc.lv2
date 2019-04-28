@@ -17,6 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -101,7 +105,11 @@ Dyncomp_set_threshold (Dyncomp* self, float t)
 		return;
 	}
 	self->l_thr = t;
+#ifdef __USE_GNU
+	self->p_thr = 0.5f * exp10f (0.1f * t);
+#else
 	self->p_thr = 0.5f * powf (10.0f, 0.1f * t);
+#endif
 }
 
 static inline void

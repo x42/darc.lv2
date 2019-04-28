@@ -669,8 +669,12 @@ comp_curve (float in, float threshold, float ratio, bool hold)
 	if (hold && in < threshold) {
 		key = threshold;
 	}
-	float g = log (pow (10.0, 1. + 0.1 * threshold) + pow (10.0, 1. + 0.1 * key));
-	return /*-10/log(10)*/ -4.342944819 * ratio * g + in;
+#ifdef __USE_GNU
+	float g = logf (exp10f (1.f + .1f * threshold) + exp10f (1.f + .1f * key));
+#else
+	float g = logf (powf (10.f, 1.f + .1f * threshold) + powf (10.f, 1.f + .1f * key));
+#endif
+	return /*-10/log(10)*/ -4.342944819f * ratio * g + in;
 }
 
 /* ****************************************************************************/
