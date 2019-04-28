@@ -1,7 +1,7 @@
 darc.lv2 - Dynamic Audio Range Compressor
 =========================================
 
-dark.lv2 is a general purpose audio signal compressor.
+darc.lv2 is a general purpose audio signal compressor.
 
 The compression gain is controlled by threshold and ratio only:
 Makeup gain is automatically set to maintain equal loudness at -10 dBFS/RMS with a soft knee.
