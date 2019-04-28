@@ -397,7 +397,7 @@ run (LV2_Handle instance, uint32_t n_samples)
 
 		self->_gmin = fminf (40.f, fmaxf (-20.f, self->_gmin));
 		self->_gmax = fminf (40.f, fmaxf (-20.f, self->_gmax));
-		self->_rms  = fminf (0.f, fmaxf (-80.f, self->_rms));
+		self->_rms  = fminf (10.f, fmaxf (-80.f, self->_rms));
 
 #ifdef DISPLAY_INTERFACE
 		if (self->queue_draw && (self->ui_gmin != self->_gmin || self->ui_gmax != self->_gmax)) {

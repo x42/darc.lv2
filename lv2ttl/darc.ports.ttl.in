@@ -96,9 +96,9 @@
 		a lv2:OutputPort ,
 			lv2:ControlPort ;
 		lv2:index 8 ;
-		lv2:symbol "peak" ;
-		lv2:name "Peak Level" ;
+		lv2:symbol "rms" ;
+		lv2:name "Signal Level" ;
 		lv2:minimum -80.0 ;
-		lv2:maximum 0.0;
+		lv2:maximum 10.0;
 		units:unit units:db ;
 	] , [

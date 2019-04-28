@@ -20,7 +20,7 @@ static const RtkLv2Description _plugin_stereo = {
 		{ "release", CONTROL_IN, 0.300000, 0.030000, 3.000000, "Release Time"},
 		{ "gain_min", CONTROL_OUT, nan, -20.000000, 40.000000, "Gain Min"},
 		{ "gain_max", CONTROL_OUT, nan, -20.000000, 40.000000, "Gain Max"},
-		{ "peak", CONTROL_OUT, nan, -80.000000, 0.000000, "Peak Level"},
+		{ "rms", CONTROL_OUT, nan, -80.000000, 10.000000, "Signal Level"},
 		{ "inL", AUDIO_IN, nan, nan, nan, "In Left"},
 		{ "outL", AUDIO_OUT, nan, nan, nan, "Out Left"},
 		{ "inR", AUDIO_IN, nan, nan, nan, "In Right"},
