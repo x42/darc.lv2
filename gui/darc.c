@@ -63,11 +63,11 @@ typedef struct {
 	float _rms;
 
 	/* control knobs */
-	RobTkDial* spn_ctrl[4];
-	RobTkLbl*  lbl_ctrl[4];
+	RobTkDial* spn_ctrl[5];
+	RobTkLbl*  lbl_ctrl[5];
 	RobTkCBtn* btn_hold;
 
-	cairo_surface_t* dial_bg[4];
+	cairo_surface_t* dial_bg[5];
 
 	/* gain meter */
 	cairo_pattern_t* m_fg;
@@ -109,6 +109,7 @@ struct CtrlRange {
 
 const struct CtrlRange ctrl_range[] = {
 	/* clang-format off */
+	{  -10,  30,   0, 0.2, 5, false, "Input Gain" },
 	{  -50, -10, -30, 0.1, 5, false, "Threshold" },
 	{    0,   1,   0,  72, 2, true,  "Ratio" },
 	{ .001, .1, 0.01, 100, 5, true,  "Attack" },
@@ -117,6 +118,7 @@ const struct CtrlRange ctrl_range[] = {
 };
 
 static const char* tooltips[] = {
+	"<markup><b>Input Gain.</b> Gain applied before level detection\nor any other processing.\n(not visualized as x-axis offset in curve)</markup>",
 	"<markup><b>Threshold.</b> Signal level (RMS) at which\nthe compression effect is engaged.</markup>",
 	"<markup><b>Ratio.</b> The amount of gain or attenuation to be\napplied (dB/dB above threshold).\nUnity is retained at -10dBFS/RMS\n(auto makeup-gain).</markup>",
 	"<markup><b>Attack time.</b> Time it takes for the signal\nto become fully compressed after\nexceeding the threshold.</markup>",
@@ -223,6 +225,17 @@ prepare_faceplates (darcUI* ui)
 
 	INIT_DIAL_SF (ui->dial_bg[0], GED_WIDTH + 8, GED_HEIGHT + 20);
 	RESPLABLEL (0.00);
+	write_text_full (cr, "-10", ui->font[0], xlp + 6, ylp, 0, 1, c_dlf);
+	RESPLABLEL (0.25);
+	RESPLABLEL (0.5);
+	write_text_full (cr, "+10", ui->font[0], xlp - 2, ylp, 0, 2, c_dlf);
+	RESPLABLEL (.75);
+	RESPLABLEL (1.0);
+	write_text_full (cr, "+30", ui->font[0], xlp - 6, ylp, 0, 3, c_dlf);
+	cairo_destroy (cr);
+
+	INIT_DIAL_SF (ui->dial_bg[1], GED_WIDTH + 8, GED_HEIGHT + 20);
+	RESPLABLEL (0.00);
 	write_text_full (cr, "-50", ui->font[0], xlp + 6, ylp, 0, 1, c_dlf);
 	RESPLABLEL (0.25);
 	RESPLABLEL (0.5);
@@ -232,7 +245,7 @@ prepare_faceplates (darcUI* ui)
 	write_text_full (cr, "-10", ui->font[0], xlp - 6, ylp, 0, 3, c_dlf);
 	cairo_destroy (cr);
 
-	INIT_DIAL_SF (ui->dial_bg[1], GED_WIDTH + 8, GED_HEIGHT + 20);
+	INIT_DIAL_SF (ui->dial_bg[2], GED_WIDTH + 8, GED_HEIGHT + 20);
 	RESPLABLEL (0.00);
 	write_text_full (cr, "1", ui->font[0], xlp + 4, ylp, 0, 1, c_dlf);
 	RESPLABLEL (.25);
@@ -247,7 +260,7 @@ prepare_faceplates (darcUI* ui)
 	write_text_full (cr, "Lim", ui->font[0], xlp - 9, ylp, 0, 3, c_dlf);
 	cairo_destroy (cr);
 
-	INIT_DIAL_SF (ui->dial_bg[2], GED_WIDTH + 8, GED_HEIGHT + 20);
+	INIT_DIAL_SF (ui->dial_bg[3], GED_WIDTH + 8, GED_HEIGHT + 20);
 	RESPLABLEL (0.00);
 	write_text_full (cr, "1ms", ui->font[0], xlp + 9, ylp, 0, 1, c_dlf);
 	RESPLABLEL (.16);
@@ -261,7 +274,7 @@ prepare_faceplates (darcUI* ui)
 	write_text_full (cr, "100", ui->font[0], xlp - 9, ylp, 0, 3, c_dlf);
 	cairo_destroy (cr);
 
-	INIT_DIAL_SF (ui->dial_bg[3], GED_WIDTH + 8, GED_HEIGHT + 20);
+	INIT_DIAL_SF (ui->dial_bg[4], GED_WIDTH + 8, GED_HEIGHT + 20);
 	RESPLABLEL (0.00);
 	write_text_full (cr, "30ms", ui->font[0], xlp + 9, ylp, 0, 1, c_dlf);
 	RESPLABLEL (.16);
@@ -331,8 +344,8 @@ dial_annotation_tm (RobTkDial* d, cairo_t* cr, void* data)
 {
 	darcUI* ui = (darcUI*)(data);
 	char    txt[16];
-	assert (d == ui->spn_ctrl[2] || d == ui->spn_ctrl[3]);
-	const float val = gui_to_ctrl ((d == ui->spn_ctrl[2]) ? 2 : 3, d->cur);
+	assert (d == ui->spn_ctrl[3] || d == ui->spn_ctrl[4]);
+	const float val = gui_to_ctrl ((d == ui->spn_ctrl[3]) ? 3 : 4, d->cur);
 	format_msec (txt, val);
 	display_annotation (ui, d, cr, txt);
 }
@@ -342,7 +355,7 @@ dial_annotation_rr (RobTkDial* d, cairo_t* cr, void* data)
 {
 	darcUI*     ui = (darcUI*)(data);
 	char        txt[16];
-	const float val = gui_to_ctrl (1, d->cur);
+	const float val = gui_to_ctrl (2, d->cur);
 	if (val >= 1) {
 		snprintf (txt, 16, "\u221E : 1");
 	} else if (val >= .9) {
@@ -361,7 +374,7 @@ static bool
 cb_spn_ctrl (RobWidget* w, void* handle)
 {
 	darcUI* ui = (darcUI*)handle;
-	if (w == ui->spn_ctrl[0]->rw || w == ui->spn_ctrl[1]->rw) {
+	if (w == ui->spn_ctrl[1]->rw || w == ui->spn_ctrl[2]->rw) {
 		ui->ctrl_dirty = true;
 		queue_draw (ui->m1);
 	}
@@ -370,12 +383,12 @@ cb_spn_ctrl (RobWidget* w, void* handle)
 		return TRUE;
 	}
 
-	for (uint32_t i = 0; i < 4; ++i) {
+	for (uint32_t i = 0; i < 5; ++i) {
 		if (w != ui->spn_ctrl[i]->rw) {
 			continue;
 		}
 		const float val = gui_to_ctrl (i, robtk_dial_get_value (ui->spn_ctrl[i]));
-		ui->write (ui->controller, DARC_THRESHOLD + i, sizeof (float), 0, (const void*)&val);
+		ui->write (ui->controller, DARC_INPUTGAIN + i, sizeof (float), 0, (const void*)&val);
 		break;
 	}
 	return TRUE;
@@ -465,7 +478,7 @@ ttip_handler (RobWidget* rw, bool on, void* handle)
 	ui->tt_id      = -1;
 	ui->tt_timeout = 0;
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		if (rw == ui->lbl_ctrl[i]->rw) {
 			ui->tt_id = i;
 			break;
@@ -680,7 +693,7 @@ comp_curve (float in, float threshold, float ratio, bool hold)
 
 /* ****************************************************************************/
 
-#define M1RECT 280
+#define M1RECT 350
 
 static void
 m1_size_request (RobWidget* handle, int* w, int* h)
@@ -767,7 +780,7 @@ m1_render_grid (darcUI* ui, cairo_t* cr)
 	cairo_set_dash (cr, 0, 0, 0);
 
 	write_text_full (cr, "Output", ui->font[0], M1RECT * (65.f / 70.f), M1RECT * .5, M_PI * .5, 5, c_dlf);
-	write_text_full (cr, "Input [dBFS/RMS]", ui->font[0], M1RECT * .5, 5, 0, 8, c_dlf);
+	write_text_full (cr, "Input [dBFS/RMS]", ui->font[0], M1RECT * .5, M1RECT * (5.f / 70.f), 0, 5, c_dlf);
 
 	/* 0dBFS limit indicator */
 	cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
@@ -813,8 +826,8 @@ m1_render_mask (darcUI* ui)
 	rounded_rectangle (cm, 0, 0, M1RECT, M1RECT, 8);
 	cairo_clip (cm);
 
-	const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
-	const float ratio = gui_to_ctrl (1, robtk_dial_get_value (ui->spn_ctrl[1]));
+	const float thrsh = gui_to_ctrl (1, robtk_dial_get_value (ui->spn_ctrl[1]));
+	const float ratio = gui_to_ctrl (2, robtk_dial_get_value (ui->spn_ctrl[2]));
 	const bool  hold  = robtk_cbtn_get_active (ui->btn_hold);
 
 	cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
@@ -918,7 +931,7 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 
 	cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
 
-	const float thrsh = gui_to_ctrl (0, robtk_dial_get_value (ui->spn_ctrl[0]));
+	const float thrsh = gui_to_ctrl (1, robtk_dial_get_value (ui->spn_ctrl[1]));
 	const bool  hold  = robtk_cbtn_get_active (ui->btn_hold);
 
 	float thx = (thrsh + 60.f) * M1RECT / 70.f;
@@ -1040,20 +1053,20 @@ toplevel (darcUI* ui, void* const top)
 #define GLB_W(PTR) robtk_lbl_widget (PTR)
 #define GBT_W(PTR) robtk_cbtn_widget (PTR)
 
-	for (uint32_t i = 0; i < 4; ++i) {
+	for (uint32_t i = 0; i < 5; ++i) {
 		ui->lbl_ctrl[i] = robtk_lbl_new (ctrl_range[i].name);
 		ui->spn_ctrl[i] = robtk_dial_new_with_size (
 		    k_min (i), k_max (i), k_step (i),
 		    GED_WIDTH + 8, GED_HEIGHT + 20, GED_CX + 4, GED_CY + 15, GED_RADIUS);
 		ui->spn_ctrl[i]->with_scroll_accel = false;
 
-		robtk_dial_set_callback (ui->spn_ctrl[i], cb_spn_ctrl, ui);
 		robtk_dial_set_value (ui->spn_ctrl[i], ctrl_to_gui (i, ctrl_range[i].dflt));
+		robtk_dial_set_callback (ui->spn_ctrl[i], cb_spn_ctrl, ui);
 		robtk_dial_set_default (ui->spn_ctrl[i], ctrl_to_gui (i, ctrl_range[i].dflt));
 		robtk_dial_set_scroll_mult (ui->spn_ctrl[i], ctrl_range[i].mult);
 
 		if (ui->touch) {
-			robtk_dial_set_touch (ui->spn_ctrl[i], ui->touch->touch, ui->touch->handle, DARC_THRESHOLD + i);
+			robtk_dial_set_touch (ui->spn_ctrl[i], ui->touch->touch, ui->touch->handle, DARC_INPUTGAIN + i);
 		}
 
 		robtk_dial_set_scaled_surface_scale (ui->spn_ctrl[i], ui->dial_bg[i], 2.0);
@@ -1063,15 +1076,19 @@ toplevel (darcUI* ui, void* const top)
 		rob_table_attach (ui->ctbl, GLB_W (ui->lbl_ctrl[i]), i, i + 1, 1, 2, 4, 0, RTK_EXANDF, RTK_SHRINK);
 	}
 
+	/* snap at 0dB gain */
+	robtk_dial_set_detent_default (ui->spn_ctrl[0], true);
+
 	/* use 'dot' for time knobs */
-	ui->spn_ctrl[2]->displaymode = 3;
-	ui->spn_ctrl[3]->displaymode = 3; // use dot
+	ui->spn_ctrl[3]->displaymode = 3;
+	ui->spn_ctrl[4]->displaymode = 3; // use dot
 
 	/* these numerics are meaningful */
 	robtk_dial_annotation_callback (ui->spn_ctrl[0], dial_annotation_db, ui);
-	robtk_dial_annotation_callback (ui->spn_ctrl[1], dial_annotation_rr, ui);
-	robtk_dial_annotation_callback (ui->spn_ctrl[2], dial_annotation_tm, ui);
+	robtk_dial_annotation_callback (ui->spn_ctrl[1], dial_annotation_db, ui);
+	robtk_dial_annotation_callback (ui->spn_ctrl[2], dial_annotation_rr, ui);
 	robtk_dial_annotation_callback (ui->spn_ctrl[3], dial_annotation_tm, ui);
+	robtk_dial_annotation_callback (ui->spn_ctrl[4], dial_annotation_tm, ui);
 
 	/* custom knob colors */
 	{
@@ -1082,28 +1099,35 @@ toplevel (darcUI* ui, void* const top)
 		        ui->spn_ctrl[0]->dcol[0][2] = .05;
 	}
 	{
-		const float c_bg[4] = { .7, .2, .2, 1.0 };
+		const float c_bg[4] = { .8, .5, .0, 1.0 };
 		create_dial_pattern (ui->spn_ctrl[1], c_bg);
 		ui->spn_ctrl[1]->dcol[0][0] =
 		    ui->spn_ctrl[1]->dcol[0][1] =
 		        ui->spn_ctrl[1]->dcol[0][2] = .05;
 	}
 	{
-		const float c_bg[4] = { .3, .3, .7, 1.0 };
+		const float c_bg[4] = { .8, .2, .2, 1.0 };
 		create_dial_pattern (ui->spn_ctrl[2], c_bg);
 		ui->spn_ctrl[2]->dcol[0][0] =
 		    ui->spn_ctrl[2]->dcol[0][1] =
 		        ui->spn_ctrl[2]->dcol[0][2] = .05;
+	}
+	{
+		const float c_bg[4] = { .3, .3, .7, 1.0 };
 		create_dial_pattern (ui->spn_ctrl[3], c_bg);
 		ui->spn_ctrl[3]->dcol[0][0] =
 		    ui->spn_ctrl[3]->dcol[0][1] =
 		        ui->spn_ctrl[3]->dcol[0][2] = .05;
+		create_dial_pattern (ui->spn_ctrl[4], c_bg);
+		ui->spn_ctrl[4]->dcol[0][0] =
+		    ui->spn_ctrl[4]->dcol[0][1] =
+		        ui->spn_ctrl[4]->dcol[0][2] = .05;
 	}
 
 	/* explicit hold button */
 	ui->btn_hold = robtk_cbtn_new ("Hold", GBT_LED_RIGHT, false);
 	robtk_cbtn_set_callback (ui->btn_hold, cb_btn_hold, ui);
-	rob_table_attach (ui->ctbl, GBT_W (ui->btn_hold), 3, 4, 3, 4, 8, 2, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach (ui->ctbl, GBT_W (ui->btn_hold), 4, 5, 3, 4, 8, 2, RTK_EXANDF, RTK_SHRINK);
 
 	robtk_cbtn_set_temporary_mode (ui->btn_hold, 1);
 	robtk_cbtn_set_color_on (ui->btn_hold, 0.1, 0.3, 0.8);
@@ -1130,7 +1154,7 @@ toplevel (darcUI* ui, void* const top)
 static void
 gui_cleanup (darcUI* ui)
 {
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		robtk_dial_destroy (ui->spn_ctrl[i]);
 		robtk_lbl_destroy (ui->lbl_ctrl[i]);
 		cairo_surface_destroy (ui->dial_bg[i]);
@@ -1287,10 +1311,10 @@ port_event (LV2UI_Handle handle,
 		ui->disable_signals = true;
 		robtk_cbtn_set_active (ui->btn_hold, (*(float*)buffer) > 0);
 		ui->disable_signals = false;
-	} else if (port_index >= DARC_THRESHOLD && port_index <= DARC_RELEASE) {
+	} else if (port_index >= DARC_INPUTGAIN && port_index <= DARC_RELEASE) {
 		const float v       = *(float*)buffer;
 		ui->disable_signals = true;
-		uint32_t ctrl       = port_index - DARC_THRESHOLD;
+		uint32_t ctrl       = port_index - DARC_INPUTGAIN;
 		robtk_dial_set_value (ui->spn_ctrl[ctrl], ctrl_to_gui (ctrl, v));
 		ui->disable_signals = false;
 	}

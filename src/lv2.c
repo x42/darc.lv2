@@ -53,16 +53,20 @@ typedef struct {
 	uint32_t n_channels;
 	float    norm_input;
 
-	float rat;
-	float rat1;
+	float ratio;
+	float p_rat;
 
 	bool hold;
 
+	float igain;
+	float p_ign;
+	float l_ign;
+
 	float p_thr;
+	float l_thr;
+
 	float w_att;
 	float w_rel;
-
-	float l_thr;
 	float t_att;
 	float t_rel;
 
@@ -95,7 +99,21 @@ Dyncomp_reset (Dyncomp* self)
 static inline void
 Dyncomp_set_ratio (Dyncomp* self, float r)
 {
-	self->rat1 = 0.5f * r;
+	self->p_rat = 0.5f * r;
+}
+
+static inline void
+Dyncomp_set_inputgain (Dyncomp* self, float g)
+{
+	if (g == self->l_ign) {
+		return;
+	}
+	self->l_ign = g;
+#ifdef __USE_GNU
+	self->p_ign = exp10f (0.05f * g);
+#else
+	self->p_ign = powf (10.0f, 0.05f * g);
+#endif
 }
 
 static inline void
@@ -159,10 +177,15 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 	self->n_channels  = n_channels;
 	self->norm_input  = 1.f / n_channels;
 
-	self->rat   = 0.f;
-	self->rat1  = 0.f;
-	self->l_thr = -10.f;
+	self->ratio = 0.f;
+	self->p_rat = 0.f;
+
+	self->igain = 1.f;
+	self->p_ign = 1.f;
+	self->l_ign = 0.f;
+
 	self->p_thr = 0.05f;
+	self->l_thr = -10.f;
 
 	self->hold = false;
 
@@ -192,9 +215,18 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		gmin = self->gmin;
 	}
 
+	/* interpolate input gain */
+	float       g  = self->igain;
+	const float g1 = self->p_ign;
+	float       dg = g1 - g;
+	if (fabsf (dg) < 1e-5f || (g > 1.f && fabsf (dg) < 1e-3f)) {
+		g  = g1;
+		dg = 0;
+	}
+
 	/* interpolate ratio */
-	float       r  = self->rat;
-	const float r1 = self->rat1;
+	float       r  = self->ratio;
+	const float r1 = self->p_rat;
 	float       dr = r1 - r;
 	if (fabsf (dr) < 1e-5f) {
 		r  = r1;
@@ -220,10 +252,15 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	const float    n_1 = self->norm_input;
 
 	for (uint32_t j = 0; j < n_samples; ++j) {
+		/* update input gain */
+		if (dg != 0) {
+			g += w_lpf * (g1 - g);
+		}
+
 		/* Input/Key RMS */
 		float v = 0;
 		for (uint32_t i = 0; i < nc; ++i) {
-			const float x = inp[i][j];
+			const float x = g * inp[i][j];
 			v += x * x;
 		}
 
@@ -267,7 +304,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		gmax = fmaxf (gmax, pg);
 		gmin = fminf (gmin, pg);
 
-		pg = expf (pg);
+		pg = g * expf (pg);
 
 		/* apply gain factor to all channels */
 		for (uint32_t i = 0; i < nc; ++i) {
@@ -276,13 +313,14 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	}
 
 	/* copy back variables */
-	self->za1  = za1;
-	self->zr1  = zr1;
-	self->zr2  = zr2;
-	self->rat  = r;
-	self->gmax = gmax;
-	self->gmin = gmin;
-	self->rms  = rms + 1e-12; // + denormal protection
+	self->za1   = za1;
+	self->zr1   = zr1;
+	self->zr2   = zr2;
+	self->igain = g;
+	self->ratio = r;
+	self->gmax  = gmax;
+	self->gmin  = gmin;
+	self->rms   = rms + 1e-12; // + denormal protection
 }
 
 /* ****************************************************************************/
@@ -374,10 +412,12 @@ run (LV2_Handle instance, uint32_t n_samples)
 	const bool enable = *self->_port[DARC_ENABLE] > 0;
 
 	if (enable) {
+		Dyncomp_set_inputgain (&self->dyncomp, *self->_port[DARC_INPUTGAIN]);
 		Dyncomp_set_threshold (&self->dyncomp, *self->_port[DARC_THRESHOLD]);
 		Dyncomp_set_ratio (&self->dyncomp, *self->_port[DARC_RATIO]);
 		Dyncomp_set_hold (&self->dyncomp, *self->_port[DARC_HOLD] > 0);
 	} else {
+		Dyncomp_set_inputgain (&self->dyncomp, 0);
 		Dyncomp_set_threshold (&self->dyncomp, -10.f);
 		Dyncomp_set_ratio (&self->dyncomp, 0);
 		Dyncomp_set_hold (&self->dyncomp, false);
