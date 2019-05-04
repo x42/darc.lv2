@@ -949,7 +949,7 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	cairo_set_line_width (cr, 1);
 	cairo_move_to (cr, floor (thx) - .5, M1RECT * 9.f / 70.f);
 	cairo_line_to (cr, floor (thx) - .5, M1RECT);
-	cairo_set_source_rgba (cr, .6, .6, .1, .9); // match threshold knob color
+	cairo_set_source_rgba (cr, .8, .7, .1, .9);
 	const double dash1[] = { 1, 1 };
 	cairo_set_dash (cr, dash1, 2, 0);
 	cairo_stroke (cr);
@@ -1092,21 +1092,21 @@ toplevel (darcUI* ui, void* const top)
 
 	/* custom knob colors */
 	{
-		const float c_bg[4] = { .6, .6, .1, 1.0 };
+		const float c_bg[4] = { .7, .7, .1, 1.0 };
 		create_dial_pattern (ui->spn_ctrl[0], c_bg);
 		ui->spn_ctrl[0]->dcol[0][0] =
 		    ui->spn_ctrl[0]->dcol[0][1] =
 		        ui->spn_ctrl[0]->dcol[0][2] = .05;
 	}
 	{
-		const float c_bg[4] = { .8, .5, .0, 1.0 };
+		const float c_bg[4] = { .8, .3, .0, 1.0 };
 		create_dial_pattern (ui->spn_ctrl[1], c_bg);
 		ui->spn_ctrl[1]->dcol[0][0] =
 		    ui->spn_ctrl[1]->dcol[0][1] =
 		        ui->spn_ctrl[1]->dcol[0][2] = .05;
 	}
 	{
-		const float c_bg[4] = { .8, .2, .2, 1.0 };
+		const float c_bg[4] = { .9, .2, .2, 1.0 };
 		create_dial_pattern (ui->spn_ctrl[2], c_bg);
 		ui->spn_ctrl[2]->dcol[0][0] =
 		    ui->spn_ctrl[2]->dcol[0][1] =
