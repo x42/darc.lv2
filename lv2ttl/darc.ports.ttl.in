@@ -5,7 +5,7 @@
 	doap:maintainer <http://gareus.org/rgareus#me> ;
 	@VERSION@
 	doap:name "x42-comp - Dynamic Compressor@NAMESUFFIX@";
-	lv2:extensionData idpy:interface, state:interface @SIGNATURE@;
+	lv2:extensionData idpy:interface @SIGNATURE@;
 	lv2:optionalFeature lv2:hardRTCapable, idpy:queue_draw;
   @UITTL@
 	lv2:port [
