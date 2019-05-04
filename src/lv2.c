@@ -192,7 +192,7 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 	self->t_att = 0.f;
 	self->t_rel = 0.f;
 
-	self->w_rms = 12.f / sample_rate;
+	self->w_rms = 5.f / sample_rate;
 	self->w_lpf = 160.f / sample_rate;
 
 	Dyncomp_set_attack (self, 0.01f);
@@ -266,7 +266,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		v *= n_1;
 
-		rms += w_rms * (v - rms);
+		rms += w_rms * (v - rms); // TODO: consider min/max approach, 5ms integrate, 50ms readout
 		za1 += w_att * (p_thr + v - za1);
 
 		/* hold release */
