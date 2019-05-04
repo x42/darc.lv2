@@ -74,6 +74,7 @@
 		lv2:maximum 0.1 ;
 		lv2:portProperty pprop:logarithmic;
 		pprop:rangeSteps 101;
+		units:unit units:s ;
 	] , [
 		a lv2:InputPort ,
 			lv2:ControlPort ;
@@ -85,6 +86,7 @@
 		lv2:maximum 3.0 ;
 		lv2:portProperty pprop:logarithmic;
 		pprop:rangeSteps 101;
+		units:unit units:s ;
 	] , [
 		a lv2:OutputPort ,
 			lv2:ControlPort ;
