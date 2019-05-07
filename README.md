@@ -4,19 +4,22 @@ darc.lv2 - Dynamic Audio Range Compressor
 darc.lv2 is a general purpose audio signal compressor.
 
 The compression gain is controlled by threshold and ratio only:
-Makeup gain is automatically set to maintain equal loudness at -10 dBFS/RMS with a soft knee.
+Makeup gain is automatically set to retain equal loudness at -10 dBFS/RMS with a soft knee.
+This maintains perceived loudness over a wide range of thresholds and ratio settings.
 
 It is available as [LV2 plugin](http://lv2plug.in/) and standalone [JACK](http://jackaudio.org/)-application.
 
 Usage
 -----
 
-The Plugin has four controls which can be operated by mouse-drag and the scroll-wheel.
+The Plugin has five controls which can be operated by mouse-drag and the scroll-wheel.
 Holding the _Ctrl_ key allows for fine-grained control when dragging or using the mouse-wheel on a knob.
 
 Furthermore the UI offers
 *   Shift + click: reset to default
 *   Right-click on knob: toggle current value with default, 2nd click restore.
+
+For an elaborate descripton and manual, please see https://x42-plugins.com/x42/x42-compressor
 
 Install
 -------
@@ -36,7 +39,6 @@ Note to packagers: the Makefile honors `PREFIX` and `DESTDIR` variables as well
 as `CXXLAGS`, `LDFLAGS` and `OPTIMIZATIONS` (additions to `CXXFLAGS`), also
 see the first 10 lines of the Makefile.
 You really want to package the superset of [x42-plugins](https://github.com/x42/x42-plugins).
-
 
 Screenshots
 -----------
