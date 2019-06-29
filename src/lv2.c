@@ -264,9 +264,12 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 			v += x * x;
 		}
 
-		v *= n_1;
+		v *= n_1; // normalize *= 1 / (number of channels)
 
-		rms += w_rms * (v - rms); // TODO: consider min/max approach, 5ms integrate, 50ms readout
+		/* slow moving RMS, used for GUI level meter display */
+		rms += w_rms * (v - rms); // TODO: consider reporting range; 5ms integrate, 50ms min/max readout
+
+		/* calculate signal power relative to threshold, LPF using attack time constant */
 		za1 += w_att * (p_thr + v - za1);
 
 		/* hold release */
@@ -301,6 +304,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		float pg = -r * logf (20.0f * zr2);
 
+		/* store min/max gain in dB, report to UI */
 		gmax = fmaxf (gmax, pg);
 		gmin = fminf (gmin, pg);
 
