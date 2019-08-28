@@ -28,6 +28,7 @@
 
 #include "../src/darc.h"
 
+#define RTK_USE_HOST_COLORS
 #define RTK_URI DARC_URI
 #define RTK_GUI "ui"
 
@@ -181,7 +182,7 @@ k_step (const uint32_t c)
 
 /* ****************************************************************************/
 
-static const float c_dlf[4] = { 0.8, 0.8, 0.8, 1.0 }; // custom foreground color
+static float c_dlf[4] = { 0.8, 0.8, 0.8, 1.0 };
 
 /* *****************************************************************************
  * Knob faceplates
@@ -1245,6 +1246,8 @@ instantiate (
 			options = (LV2_Options_Option*)features[i]->data;
 		}
 	}
+
+	interpolate_fg_bg (c_dlf, .2);
 
 	ui->nfo             = robtk_info (ui_toplevel);
 	ui->write           = write_function;
