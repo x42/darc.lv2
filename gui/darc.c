@@ -121,7 +121,7 @@ const struct CtrlRange ctrl_range[] = {
 static const char* tooltips[] = {
 	"<markup><b>Input Gain.</b> Gain applied before level detection\nor any other processing.\n(not visualized as x-axis offset in curve)</markup>",
 	"<markup><b>Threshold.</b> Signal level (RMS) at which\nthe compression effect is engaged.</markup>",
-	"<markup><b>Ratio.</b> The amount of gain or attenuation to be\napplied (dB/dB above threshold).\nUnity is retained at -10dBFS/RMS\n(auto makeup-gain).</markup>",
+	"<markup><b>Ratio.</b> The amount of gain or attenuation to be\napplied (dB/dB above threshold).\nUnity is retained at -10dBFS/RMS (auto makeup-gain).</markup>",
 	"<markup><b>Attack time.</b> Time it takes for the signal\nto become fully compressed after\nexceeding the threshold.</markup>",
 	"<markup><b>Release time.</b> Minimum recovery time\nto uncompressed signal-level\nafter falling below threshold.</markup>",
 	"<markup><b>Hold.</b> Retain current attenuation when the signal\nsubceeds the threshold.\nThis prevents modulation of the noise-floor\nand can counter-act 'pumping'.</markup>",
@@ -486,7 +486,7 @@ ttip_handler (RobWidget* rw, bool on, void* handle)
 		}
 	}
 	if (rw == ui->btn_hold->rw) {
-		ui->tt_id = 4;
+		ui->tt_id = 5;
 	}
 
 	if (on && ui->tt_id >= 0) {
