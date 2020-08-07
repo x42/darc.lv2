@@ -163,7 +163,7 @@ Dyncomp_get_gain (Dyncomp* self, float* gmin, float* gmax, float* rms)
 	*gmin = self->gmin * 8.68589f; /* 20 / log(10) */
 	*gmax = self->gmax * 8.68589f;
 	if (self->rms > 1e-8f) {
-		*rms = 10.f * log10f (2.f * self->rms * self->norm_input);
+		*rms = 10.f * log10f (2.f * self->rms);
 	} else {
 		*rms = -80;
 	}
