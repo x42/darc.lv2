@@ -28,7 +28,7 @@ Compiling darc.lv2 requires the LV2 SDK, jack-headers, gnu-make, a c++-compiler,
 liblo, libpango, libcairo and openGL (sometimes called: glu, glx, mesa).
 
 ```bash
-  git clone git://github.com/x42/darc.lv2.git
+  git clone https://github.com/x42/darc.lv2.git
   cd darc.lv2
   make submodules
   make
