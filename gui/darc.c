@@ -501,6 +501,17 @@ ttip_handler (RobWidget* rw, bool on, void* handle)
 	}
 }
 
+static void
+top_leave_notify (RobWidget* rw)
+{
+	darcUI* ui = (darcUI*)rw->children[1]->top;
+	if (ui->ctbl->expose_event != rcontainer_expose_event) {
+		ui->ctbl->expose_event    = rcontainer_expose_event;
+		ui->ctbl->parent->resized = TRUE; //full re-expose
+		queue_draw (ui->rw);
+	}
+}
+
 /* *****************************************************************************
  * Gain Meter Display
  */
@@ -1149,6 +1160,7 @@ toplevel (darcUI* ui, void* const top)
 	rob_vbox_child_pack (ui->rw, ui->m1, FALSE, TRUE);
 	rob_vbox_child_pack (ui->rw, ui->ctbl, FALSE, TRUE);
 	rob_vbox_child_pack (ui->rw, ui->m0, TRUE, TRUE);
+	robwidget_set_leave_notify(ui->rw, top_leave_notify);
 	return ui->rw;
 }
 
