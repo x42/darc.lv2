@@ -420,7 +420,7 @@ static bool
 tooltip_overlay (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
 {
 	darcUI* ui = (darcUI*)rw->top;
-	assert (ui->tt_id >= 0 && ui->tt_id < 5);
+	assert (ui->tt_id >= 0 && ui->tt_id < 6);
 
 	cairo_save (cr);
 	cairo_rectangle_t event = { 0, 0, rw->area.width, rw->area.height };
