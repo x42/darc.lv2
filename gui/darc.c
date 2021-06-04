@@ -433,7 +433,7 @@ tooltip_overlay (RobWidget* rw, cairo_t* cr, cairo_rectangle_t* ev)
 	cairo_set_source_rgba (cr, 0, 0, 0, .7);
 	cairo_fill (cr);
 
-	if (ui->tt_id < 4) {
+	if (ui->tt_id < 5) {
 		rounded_rectangle (cr, ui->tt_pos->x, ui->tt_pos->y,
 		                   ui->tt_pos->width + 2, ui->tt_pos->height + 1, 3);
 		cairo_set_source_rgba (cr, 1, 1, 1, .5);
