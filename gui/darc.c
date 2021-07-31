@@ -970,13 +970,16 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 	float pkx = (ui->_rms + 60.f) * M1RECT / 70.f;
 	if (pkx > 0) {
 		cairo_save (cr);
-		cairo_rectangle (cr, 0, 0, pkx, M1RECT);
+		cairo_rectangle (cr, 0, 0, MIN (M1RECT, pkx), M1RECT);
 		cairo_clip (cr);
 		cairo_set_source_rgba (cr, 0.6, 0.6, 0.6, 0.5);
 		cairo_mask_surface (cr, ui->m1_mask, 0, 0);
 		cairo_fill (cr);
 		cairo_restore (cr);
 
+		cairo_save (cr);
+		cairo_rectangle (cr, 0, 0, MIN (M1RECT, pkx + 6), M1RECT);
+		cairo_clip (cr);
 		cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
 
 		float pky0 = (ui->_rms + ui->_gmax - 10.f) * M1RECT / -70.f;
@@ -986,6 +989,7 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 		cairo_set_line_width (cr, 5);
 		cairo_set_source_rgba (cr, 1, 1, 1, 1);
 		cairo_stroke (cr);
+		cairo_restore (cr);
 	}
 
 	return TRUE;
