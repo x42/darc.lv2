@@ -273,16 +273,16 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		za1 += w_att * (p_thr + v - za1);
 
 		/* hold release */
-		const bool hold = (za1 < p_hold);
+		const bool hold = 0 != isless (za1, p_hold);
 
 		/* Note: za1 >= p_thr; so zr1, zr2 can't become denormal */
-		if (zr1 < za1) {
+		if (isless (zr1, za1)) {
 			zr1 = za1;
 		} else if (!hold) {
 			zr1 -= w_rel * zr1;
 		}
 
-		if (zr2 < za1) {
+		if (isless (zr2, za1)) {
 			zr2 = za1;
 		} else if (!hold) {
 			zr2 += w_rel * (zr1 - zr2);
@@ -317,14 +317,29 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 	}
 
 	/* copy back variables */
-	self->za1   = za1;
-	self->zr1   = zr1;
-	self->zr2   = zr2;
 	self->igain = g;
 	self->ratio = r;
-	self->gmax  = gmax;
-	self->gmin  = gmin;
-	self->rms   = rms + 1e-12; // + denormal protection
+
+	if (!isfinite (za1)) {
+		self->za1  = 0.f;
+		self->zr1  = 0.f;
+		self->zr2  = 0.f;
+		self->newg = true; /* reset gmin/gmax next cycle */
+	} else {
+		self->za1  = za1;
+		self->zr1  = zr1;
+		self->zr2  = zr2;
+		self->gmax = gmax;
+		self->gmin = gmin;
+	}
+
+	if (!isfinite (rms)) {
+		self->rms = 0.f;
+	} else if (rms > 10) {
+		self->rms = 10; // 20dBFS
+	} else {
+		self->rms = rms + 1e-12; // + denormal protection
+	}
 }
 
 /* ****************************************************************************/
