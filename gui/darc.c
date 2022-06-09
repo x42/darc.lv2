@@ -579,7 +579,11 @@ m0_render_faceplate (darcUI* ui, cairo_t* cr)
 	cairo_paint (cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-	CairoSetSouerceRGBA (c_blk);
+	if (is_light_theme ()) {
+		CairoSetSouerceRGBA (c_g80);
+	} else {
+		CairoSetSouerceRGBA (c_blk);
+	}
 	rounded_rectangle (cr, 0, top, ui->m0_width, HGHT (M0HEIGHT), 6);
 	cairo_fill_preserve (cr);
 	cairo_clip (cr);
@@ -591,7 +595,11 @@ m0_render_faceplate (darcUI* ui, cairo_t* cr)
 
 	/* meter ticks */
 	cairo_set_line_width (cr, yscale);
-	CairoSetSouerceRGBA (c_wht);
+	if (is_light_theme ()) {
+		CairoSetSouerceRGBA (c_blk);
+	} else {
+		CairoSetSouerceRGBA (c_wht);
+	}
 	for (int i = 0; i < 7; ++i) {
 		float dbx = DEFLECT (-20 + i * 10);
 		cairo_move_to (cr, 10 + dbx, YPOS (2));
@@ -746,7 +754,11 @@ m1_render_grid (darcUI* ui, cairo_t* cr)
 
 	cairo_scale (cr, ui->rw->widget_scale, ui->rw->widget_scale);
 
-	CairoSetSouerceRGBA (c_blk);
+	if (is_light_theme ()) {
+		CairoSetSouerceRGBA (c_g80);
+	} else {
+		CairoSetSouerceRGBA (c_blk);
+	}
 	rounded_rectangle (cr, 0, 0, M1RECT, M1RECT, 8);
 	cairo_fill_preserve (cr);
 	cairo_clip (cr);
@@ -842,7 +854,11 @@ m1_render_mask (darcUI* ui)
 	const float ratio = gui_to_ctrl (2, robtk_dial_get_value (ui->spn_ctrl[2]));
 	const bool  hold  = robtk_cbtn_get_active (ui->btn_hold);
 
-	cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
+	if (is_light_theme ()) {
+		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	} else {
+		cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
+	}
 	cairo_set_line_width (cr, 1.0);
 
 	if (hold) {
@@ -880,7 +896,11 @@ m1_render_mask (darcUI* ui)
 	cairo_move_to (cr, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, false) - 10) / -70.f));
 	cairo_move_to (cm, 0, M1RECT * ((comp_curve (-60, thrsh, ratio, hold) - 10) / -70.f));
 
-	cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
+	if (is_light_theme ()) {
+		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	} else {
+		cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
+	}
 
 	for (uint32_t x = 1; x <= M1RECT; ++x) {
 		const float x_db = 70.f * (-1.f + x / (float)M1RECT) + 10.f;
@@ -972,7 +992,11 @@ m1_expose_event (RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev)
 		cairo_save (cr);
 		cairo_rectangle (cr, 0, 0, MIN (M1RECT, pkx), M1RECT);
 		cairo_clip (cr);
-		cairo_set_source_rgba (cr, 0.6, 0.6, 0.6, 0.5);
+		if (is_light_theme ()) {
+			cairo_set_source_rgba (cr, 0.4, 0.4, 0.4, 0.5);
+		} else {
+			cairo_set_source_rgba (cr, 0.6, 0.6, 0.6, 0.5);
+		}
 		cairo_mask_surface (cr, ui->m1_mask, 0, 0);
 		cairo_fill (cr);
 		cairo_restore (cr);
