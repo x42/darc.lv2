@@ -23,8 +23,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
-#include "lv2/lv2plug.in/ns/ext/options/options.h"
+#ifdef HAVE_LV2_1_18_6
+#include <lv2/atom/atom.h>
+#include <lv2/options/options.h>
+#else
+#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
+#include <lv2/lv2plug.in/ns/ext/options/options.h>
+#endif
 
 #include "../src/darc.h"
 
