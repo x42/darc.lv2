@@ -205,7 +205,7 @@ Dyncomp_init (Dyncomp* self, float sample_rate, uint32_t n_channels)
 }
 
 static inline void
-Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
+Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* io[])
 {
 	float gmin, gmax;
 
@@ -264,7 +264,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 		/* Input/Key RMS */
 		float v = 0;
 		for (uint32_t i = 0; i < nc; ++i) {
-			const float x = g * inp[i][j];
+			const float x = g * io[i][j];
 			v += x * x;
 		}
 
@@ -316,7 +316,7 @@ Dyncomp_process (Dyncomp* self, uint32_t n_samples, float* inp[], float* out[])
 
 		/* apply gain factor to all channels */
 		for (uint32_t i = 0; i < nc; ++i) {
-			out[i][j] = pg * inp[i][j];
+			io[i][j] *= pg;
 		}
 	}
 
@@ -452,7 +452,13 @@ run (LV2_Handle instance, uint32_t n_samples)
 	float* ins[2]  = { self->_port[DARC_INPUT0], self->_port[DARC_INPUT1] };
 	float* outs[2] = { self->_port[DARC_OUTPUT0], self->_port[DARC_OUTPUT1] };
 
-	Dyncomp_process (&self->dyncomp, n_samples, ins, outs);
+	for (uint32_t i = 0; i < self->dyncomp.n_channels; ++i) {
+		if (ins[i] != outs[i]) {
+			memcpy (outs[i], ins[i], sizeof (float) * n_samples);
+		}
+	}
+
+	Dyncomp_process (&self->dyncomp, n_samples, outs);
 
 	self->samplecnt += n_samples;
 	while (self->samplecnt >= self->sampletme) {
