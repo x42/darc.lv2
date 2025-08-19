@@ -79,7 +79,7 @@
 		lv2:portProperty pprop:logarithmic;
 		pprop:rangeSteps 101;
 		units:unit units:s ;
-		rdfs:comment "Attack time.</b> Time it takes for the signal to become fully compressed after exceeding the threshold";
+		rdfs:comment "Attack time. Time it takes for the signal to become fully compressed after exceeding the threshold";
 	] , [
 		a lv2:InputPort ,
 			lv2:ControlPort ;
