@@ -367,7 +367,7 @@ dial_annotation_rr (RobTkDial* d, cairo_t* cr, void* data)
 	} else if (val >= .9) {
 		snprintf (txt, 16, "%.0f : 1", 1 / (1.f - val));
 	} else {
-		snprintf (txt, 16, "%.1f : 1", 1 / (1.f - val));
+		snprintf (txt, 16, "%.2f : 1", 1 / (1.f - val));
 	}
 	display_annotation (ui, d, cr, txt);
 }
